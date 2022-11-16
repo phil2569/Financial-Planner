@@ -34,6 +34,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
@@ -44,6 +47,14 @@ dependencies {
         implementation("androidx.constraintlayout:constraintlayout:$androidx_constraint_layout")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines")
         implementation("com.google.android.material:material:$material")
+
+        // Compose
+        implementation("androidx.activity:activity-compose:$compose_activity_version")
+        implementation("androidx.compose.foundation:foundation:$compose_version")
+        implementation("androidx.compose.material:material:$compose_version")
+        implementation("androidx.compose.ui:ui:$compose_version")
+        implementation("androidx.compose.ui:ui-tooling:$compose_version")
+        implementation("androidx.compose.ui:ui-tooling-preview:$compose_version")
 
         // Hilt
         kapt("com.google.dagger:hilt-android-compiler:$hilt")

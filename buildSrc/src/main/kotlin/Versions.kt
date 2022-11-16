@@ -8,6 +8,10 @@ object Versions {
     const val jetbrains = "1.7.10"
     const val material = "1.7.0"
 
+    // Compose
+    const val compose_activity_version = "1.6.1"
+    const val compose_version = "1.3.1"
+
     // Hilt
     const val hilt = "2.44"
 
