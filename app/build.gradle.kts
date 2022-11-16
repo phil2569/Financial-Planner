@@ -37,6 +37,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.3.2"
+    }
 }
 
 dependencies {
@@ -49,12 +52,13 @@ dependencies {
         implementation("com.google.android.material:material:$material")
 
         // Compose
-        implementation("androidx.activity:activity-compose:$compose_activity_version")
-        implementation("androidx.compose.foundation:foundation:$compose_version")
-        implementation("androidx.compose.material:material:$compose_version")
-        implementation("androidx.compose.ui:ui:$compose_version")
+        val composeBom = platform("androidx.compose:compose-bom:2022.10.00")
+        implementation(composeBom)
+        androidTestImplementation(composeBom)
+        implementation("androidx.compose.material:material")
         implementation("androidx.compose.ui:ui-tooling:$compose_version")
-        implementation("androidx.compose.ui:ui-tooling-preview:$compose_version")
+        implementation("androidx.compose.ui:ui-tooling-preview")
+        implementation("androidx.activity:activity-compose:$compose_activity_version")
 
         // Hilt
         kapt("com.google.dagger:hilt-android-compiler:$hilt")

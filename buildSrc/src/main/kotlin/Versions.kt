@@ -5,7 +5,7 @@ object Versions {
     const val androidx_core_ktx = "1.9.0"
     const val androidx_constraint_layout = "2.1.4"
     const val coroutines = "1.6.4"
-    const val jetbrains = "1.7.10"
+    const val jetbrains = "1.7.20"
     const val material = "1.7.0"
 
     // Compose
