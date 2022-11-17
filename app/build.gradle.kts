@@ -58,7 +58,9 @@ dependencies {
         implementation("androidx.compose.material:material")
         implementation("androidx.compose.ui:ui-tooling:$compose_version")
         implementation("androidx.compose.ui:ui-tooling-preview")
+        implementation("androidx.constraintlayout:constraintlayout-compose:$compose_constraint_version")
         implementation("androidx.activity:activity-compose:$compose_activity_version")
+        implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$compose_viewmodel")
 
         // Hilt
         kapt("com.google.dagger:hilt-android-compiler:$hilt")

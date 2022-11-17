@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="history_title">Expense History</string>
+    <string name="history_no_history">You haven\'t added any expenses</string>
+
+    <!--Dialog-->
+    <string name="history_delete_expense_title">Delete Expense?</string>
+    <string name="history_delete_expense_message">This will permanently delete this expense.</string>
+
+</resources>

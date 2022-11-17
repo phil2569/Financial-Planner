@@ -11,6 +11,8 @@ object Versions {
     // Compose
     const val compose_activity_version = "1.6.1"
     const val compose_version = "1.3.1"
+    const val compose_viewmodel = "2.5.1"
+    const val compose_constraint_version = "1.0.1"
 
     // Hilt
     const val hilt = "2.44"
