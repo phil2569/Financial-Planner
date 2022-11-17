@@ -120,6 +120,6 @@ private fun NewCategoryInput(viewModel: HomeViewModel) {
 
 @Preview(showBackground = true)
 @Composable
-private fun DefaultPreview() {
+private fun NewCategoryPreview() {
     NewCategory(modifier = Modifier)
 }

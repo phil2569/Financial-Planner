@@ -1,4 +1,4 @@
-package com.scott.financialplanner.compose
+package com.scott.financialplanner.theme
 
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Typography
@@ -10,7 +10,9 @@ private val colorPalette = lightColors(
 )
 
 private val typography = Typography(
-    button = buttonStyle
+    button = button,
+    body1 = body1,
+    h1 = topBar
 )
 
 @Composable

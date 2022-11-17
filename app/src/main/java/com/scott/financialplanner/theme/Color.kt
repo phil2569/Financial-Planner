@@ -1,4 +1,4 @@
-package com.scott.financialplanner.compose
+package com.scott.financialplanner.theme
 
 import androidx.compose.ui.graphics.Color
 
