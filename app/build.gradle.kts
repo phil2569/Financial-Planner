@@ -67,8 +67,10 @@ dependencies {
         implementation("com.google.dagger:hilt-android:$hilt")
 
         // Unit Test
+        testImplementation("app.cash.turbine:turbine:$turbine")
         testImplementation("io.mockk:mockk:$mockk")
         testImplementation("junit:junit:$junit")
+        testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines")
 
         // Android Test
         androidTestImplementation("androidx.test:core:$androidx_test")

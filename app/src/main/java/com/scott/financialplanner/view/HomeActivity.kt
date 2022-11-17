@@ -1,4 +1,4 @@
-package com.scott.financialplanner
+package com.scott.financialplanner.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

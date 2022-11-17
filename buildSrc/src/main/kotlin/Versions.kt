@@ -24,4 +24,5 @@ object Versions {
     const val junit = "4.13.2"
     const val kotest = "5.0.1"
     const val mockk = "1.12.4"
+    const val turbine = "0.12.1"
 }
