@@ -2,6 +2,7 @@ package com.scott.financialplanner.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.scott.financialplanner.database.repository.FinanceRepository
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.AcceptNewCategoryClicked
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CancelNewCategoryClicked
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.NewCategoryClicked
@@ -19,7 +20,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
  * The ViewModel used to manage the state of the home screen.
  */
 @HiltViewModel
-class HomeViewModel @Inject constructor(): ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val financeRepository: FinanceRepository
+): ViewModel() {
 
     private val _actionChannel = Channel<HomeScreenAction>(capacity = Channel.UNLIMITED)
     private val _homeScreenState = MutableStateFlow(HomeScreenState())
@@ -38,6 +41,9 @@ class HomeViewModel @Inject constructor(): ViewModel() {
         _actionChannel.receiveAsFlow()
             .onEach { handleAction(it) }
             .launchIn(viewModelScope)
+        financeRepository.categories.onEach {
+            println("testingg categories: $it")
+        }.launchIn(viewModelScope)
     }
 
     private fun handleAction(action: HomeScreenAction) {

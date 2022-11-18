@@ -17,6 +17,9 @@ object Versions {
     // Hilt
     const val hilt = "2.44"
 
+    // Room
+    const val room = "2.4.3"
+
     // Test
     const val androidx_test = "1.5.0"
     const val androidx_test_junit = "1.1.4"

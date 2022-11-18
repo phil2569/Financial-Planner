@@ -21,11 +21,13 @@ import com.scott.financialplanner.R
 import com.scott.financialplanner.theme.FinancialPlannerTheme
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.HomeViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * The Launcher activity.
  * Displays the current expense categories if they exist and allows for the creation of new ones.
  */
+@AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
 
     private val homeViewModel by viewModels<HomeViewModel>()

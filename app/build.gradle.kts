@@ -66,6 +66,10 @@ dependencies {
         kapt("com.google.dagger:hilt-android-compiler:$hilt")
         implementation("com.google.dagger:hilt-android:$hilt")
 
+        // Room
+        implementation("androidx.room:room-runtime:$room")
+        kapt("androidx.room:room-compiler:$room")
+
         // Unit Test
         testImplementation("app.cash.turbine:turbine:$turbine")
         testImplementation("io.mockk:mockk:$mockk")
