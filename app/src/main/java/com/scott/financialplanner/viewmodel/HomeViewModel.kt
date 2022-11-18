@@ -41,9 +41,9 @@ class HomeViewModel @Inject constructor(
         _actionChannel.receiveAsFlow()
             .onEach { handleAction(it) }
             .launchIn(viewModelScope)
-        financeRepository.categories.onEach {
+       /* financeRepository.categories.onEach {
             println("testingg categories: $it")
-        }.launchIn(viewModelScope)
+        }.launchIn(viewModelScope)*/
     }
 
     private fun handleAction(action: HomeScreenAction) {

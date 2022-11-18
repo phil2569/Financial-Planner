@@ -1,9 +1,11 @@
-package com.scott.financialplanner
+package com.scott.financialplanner.viewmodel
 
 import app.cash.turbine.test
-import com.scott.financialplanner.viewmodel.HomeViewModel
+import com.scott.financialplanner.TestDispatcherRule
+import com.scott.financialplanner.database.repository.FinanceRepository
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -14,6 +16,8 @@ class HomeViewModelTest {
 
     @get:Rule
     val dispatcherRule = TestDispatcherRule()
+
+    private val financeRepository = mockk<FinanceRepository>()
 
     @Test
     fun `home screen initializes with correct state`() = runTest {
@@ -76,5 +80,7 @@ class HomeViewModelTest {
         }
     }
 
-    private fun buildViewModel() = HomeViewModel()
+    private fun buildViewModel() = HomeViewModel(
+        financeRepository = financeRepository
+    )
 }

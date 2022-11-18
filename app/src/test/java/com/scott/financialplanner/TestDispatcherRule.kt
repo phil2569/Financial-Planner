@@ -1,5 +1,6 @@
 package com.scott.financialplanner
 
+import com.scott.financialplanner.provider.DispatcherProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +14,14 @@ import org.junit.runner.Description
 class TestDispatcherRule(
     private val dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()
 ) : TestWatcher() {
+
+    val testCoroutineProvider = object : DispatcherProvider {
+        override fun main(): CoroutineDispatcher = dispatcher
+        override fun default(): CoroutineDispatcher = dispatcher
+        override fun io(): CoroutineDispatcher = dispatcher
+        override fun unconfined(): CoroutineDispatcher = dispatcher
+    }
+
     override fun starting(description: Description) {
         super.starting(description)
         Dispatchers.setMain(dispatcher)
