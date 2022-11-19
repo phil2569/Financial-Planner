@@ -1,5 +1,6 @@
 package com.scott.financialplanner.theme
 
+import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -15,6 +16,19 @@ val body1 = TextStyle(
     fontFamily = Lora,
     fontWeight = FontWeight.Medium,
     fontSize = 14.sp
+)
+
+val header3 = TextStyle(
+    color = Color.Black,
+    fontFamily = Lora,
+    fontWeight = FontWeight.Normal,
+    fontSize = 20.sp
+)
+
+val header2 = TextStyle(
+    fontFamily = Lora,
+    fontWeight = FontWeight.Bold,
+    fontSize = 18.sp
 )
 
 val topBar = TextStyle(

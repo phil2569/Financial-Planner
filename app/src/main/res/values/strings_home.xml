@@ -3,7 +3,7 @@
 
     <string name="home_new_no_categories">Say hi to baby Kev! \nThen create a new category to begin tracking your expenses.</string>
     <string name="home_new_category">New Category</string>
-    <string name="home_total_monthly_expenses">Total Monthly Expenses:</string>
+    <string name="home_total_monthly_expenses">Total Expenses:</string>
     <string name="home_empty_category">Category must not be empty</string>
     <string name="home_empty_description_or_price">Description and expense must not be empty</string>
     <string name="home_category_exists">Category already exists</string>
@@ -11,7 +11,7 @@
     <!--Home Adapter Strings-->
     <string name="home_adapter_description">Expense Description</string>
     <string name="home_adapter_amount">Expense Amount</string>
-    <string name="home_adapter_total">Category Total This Month:</string>
+    <string name="home_adapter_total">Category Total:</string>
     <string name="home_adapter_cancel_button">Cancel</string>
     <string name="home_adapter_save_button">Save</string>
 

@@ -10,13 +10,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -28,9 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.scott.financialplanner.R
 import com.scott.financialplanner.viewmodel.HomeViewModel
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.AcceptNewCategoryClicked
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CancelNewCategoryClicked
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.NewCategoryClicked
+import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateNewCategory
 
 /**
  * The Composable located at the bottom of the home screen.
@@ -38,25 +30,27 @@ import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.NewCa
  */
 @Composable
 fun NewCategory(
-    viewModel: HomeViewModel = viewModel(),
-    modifier: Modifier
+    viewModel: HomeViewModel = viewModel()
 ) {
-    val homeScreenState = viewModel.homeScreenState.collectAsState().value
+    val showInputState = remember { mutableStateOf(false) }
 
     Surface(
-        modifier = modifier
+        modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
         ) {
-            if (homeScreenState.showNewCategoryInput) {
-                NewCategoryInput(viewModel)
+            if (showInputState.value) {
+                NewCategoryInput(
+                    showInputState,
+                    viewModel
+                )
             }
             Button(modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    viewModel.actions.trySend(NewCategoryClicked)
+                    showInputState.value = true
                 }) {
                 Text(text = stringResource(id = R.string.home_new_category).uppercase())
             }
@@ -65,7 +59,9 @@ fun NewCategory(
 }
 
 @Composable
-private fun NewCategoryInput(viewModel: HomeViewModel) {
+private fun NewCategoryInput(
+    showInputState: MutableState<Boolean>,
+    viewModel: HomeViewModel) {
     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
         val (cancel, accept, newCategoryTextField) = createRefs()
         val focusRequester = remember { FocusRequester() }
@@ -80,7 +76,7 @@ private fun NewCategoryInput(viewModel: HomeViewModel) {
                     bottom.linkTo(newCategoryTextField.bottom)
                 }
                 .clickable {
-                    viewModel.actions.trySend(CancelNewCategoryClicked)
+                    showInputState.value = false
                 },
             painter = painterResource(id = R.drawable.ic_cancel),
             contentDescription = null
@@ -107,7 +103,8 @@ private fun NewCategoryInput(viewModel: HomeViewModel) {
                     bottom.linkTo(newCategoryTextField.bottom)
                 }
                 .clickable {
-                    viewModel.actions.trySend(AcceptNewCategoryClicked(newCategoryName))
+                    showInputState.value = false
+                    viewModel.actions.trySend(CreateNewCategory(newCategoryName))
                 },
             painter = painterResource(id = R.drawable.ic_check),
             contentDescription = null
@@ -121,5 +118,5 @@ private fun NewCategoryInput(viewModel: HomeViewModel) {
 @Preview(showBackground = true)
 @Composable
 private fun NewCategoryPreview() {
-    NewCategory(modifier = Modifier)
+    NewCategory()
 }

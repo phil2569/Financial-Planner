@@ -25,7 +25,7 @@ class HomeViewModelTest {
         val viewmodel = buildViewModel()
 
         // Then
-        viewmodel.homeScreenState.test {
+        viewmodel.homeScreenUiState.test {
             awaitItem().apply {
                 showNewCategoryInput.shouldBeFalse()
             }
@@ -41,7 +41,7 @@ class HomeViewModelTest {
         viewmodel.actions.send(HomeViewModel.HomeScreenAction.NewCategoryClicked)
 
         // Then
-        viewmodel.homeScreenState.test {
+        viewmodel.homeScreenUiState.test {
             awaitItem().apply {
                 showNewCategoryInput.shouldBeTrue()
             }
@@ -54,10 +54,10 @@ class HomeViewModelTest {
         val viewmodel = buildViewModel()
 
         // When
-        viewmodel.actions.send(HomeViewModel.HomeScreenAction.AcceptNewCategoryClicked(""))
+        viewmodel.actions.send(HomeViewModel.HomeScreenAction.CreateNewCategory(""))
 
         // Then
-        viewmodel.homeScreenState.test {
+        viewmodel.homeScreenUiState.test {
             awaitItem().apply {
                 showNewCategoryInput.shouldBeFalse()
             }
@@ -73,7 +73,7 @@ class HomeViewModelTest {
         viewmodel.actions.send(HomeViewModel.HomeScreenAction.CancelNewCategoryClicked)
 
         // Then
-        viewmodel.homeScreenState.test {
+        viewmodel.homeScreenUiState.test {
             awaitItem().apply {
                 showNewCategoryInput.shouldBeFalse()
             }
