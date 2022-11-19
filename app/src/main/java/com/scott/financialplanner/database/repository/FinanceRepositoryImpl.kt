@@ -38,8 +38,6 @@ internal class FinanceRepositoryImpl(
 
     override fun createCategory(name: String) {
         coroutineScope.launch {
-            if (categoryRepository.categoryExists(name)) throw CategoryExistsException()
-
             cachedCategories.add(Category(name = name, 0f))
             categoryRepository.insertCategory(name)
             _categories.emit(cachedCategories)
@@ -85,6 +83,9 @@ internal class FinanceRepositoryImpl(
             }
         }
     }
+
+    override suspend fun categoryExists(categoryName: String): Boolean =
+        categoryRepository.categoryExists(categoryName)
 
     /**
      * @return the category from [cachedCategories] if it exists. Otherwise, null.

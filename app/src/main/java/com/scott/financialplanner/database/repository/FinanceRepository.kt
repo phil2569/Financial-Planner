@@ -18,7 +18,6 @@ interface FinanceRepository {
      * Creates a new [Category].
      * @param name the name of the category.
      */
-    @Throws(CategoryExistsException::class)
     fun createCategory(name: String)
 
     /**
@@ -46,6 +45,10 @@ interface FinanceRepository {
      * @param newName the new name for the category.
      */
     fun editCategoryName(currentName: String, newName: String)
-}
 
-class CategoryExistsException: Exception()
+    /**
+     * @return true if the category exists.
+     * @param categoryName the name of the category.
+     */
+    suspend fun categoryExists(categoryName: String): Boolean
+}

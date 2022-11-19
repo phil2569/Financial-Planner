@@ -2,6 +2,7 @@ package com.scott.financialplanner.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -14,6 +15,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,12 @@ import com.scott.financialplanner.R
 import com.scott.financialplanner.theme.FinancialPlannerTheme
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.HomeViewModel
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Categories
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.NoCategories
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -38,14 +46,30 @@ class HomeActivity : AppCompatActivity() {
         setContent {
             FinancialPlannerTheme {
                 HomeScreen(homeViewModel)
+                HandleUhOhs(homeViewModel)
             }
+        }
+    }
+}
+@Composable
+private fun HandleUhOhs(viewModel: HomeViewModel) {
+    val uhOh = viewModel.uhOhs.collectAsState().value
+    val context = LocalContext.current
+
+    when (uhOh) {
+        NoUhOh -> { /* Alright, alright, alright */ }
+        is CategoryAlreadyExists -> {
+            Toast.makeText(context, "${uhOh.categoryName} Already Exists!", Toast.LENGTH_SHORT).show()
+        }
+        UhOh.BlankCategory -> {
+            Toast.makeText(context, "Category must not be empty!", Toast.LENGTH_SHORT).show()
         }
     }
 }
 
 @Composable
 private fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
-    val uiState = viewModel.homeScreenUiState.collectAsState(initial = HomeViewModel.HomeScreenUiState()).value
+    val categoryLoadingState = viewModel.categoryLoadingState.collectAsState().value
 
     Column(
         modifier = Modifier
@@ -53,27 +77,36 @@ private fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
             .background(backgroundColor),
     ) {
 
-        if (uiState.showCategories) {
-            TotalExpenses(viewModel = viewModel)
-            CategoryRecycler(
-                modifier = Modifier.weight(1f),
-                viewModel = viewModel
-            )
-        } else {
-            TopAppBar(backgroundColor = MaterialTheme.colors.primary) {
-                Text(
-                    modifier = Modifier.padding(start = 12.dp),
-                    text = stringResource(id = R.string.app_name),
-                    style = MaterialTheme.typography.h1
-                )
+        when (categoryLoadingState) {
+            Initializing -> {
+
             }
+            Categories -> {
+                TotalExpenses(viewModel = viewModel)
 
-            BabyKev(
-                modifier = Modifier.weight(1f)
-            )
+                CategoryRecycler(
+                    modifier = Modifier.weight(1f),
+                    viewModel = viewModel
+                )
+
+                NewCategory(viewModel = viewModel)
+            }
+            NoCategories -> {
+                TopAppBar(backgroundColor = MaterialTheme.colors.primary) {
+                    Text(
+                        modifier = Modifier.padding(start = 12.dp),
+                        text = stringResource(id = R.string.app_name),
+                        style = MaterialTheme.typography.h1
+                    )
+                }
+
+                BabyKev(
+                    modifier = Modifier.weight(1f)
+                )
+
+                NewCategory(viewModel = viewModel)
+            }
         }
-
-        NewCategory(viewModel = viewModel)
     }
 }
 

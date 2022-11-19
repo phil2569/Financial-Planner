@@ -5,15 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.scott.financialplanner.data.Category
 import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.database.repository.FinanceRepository
+import com.scott.financialplanner.provider.DispatcherProvider
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateNewCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateExpense
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.DeleteCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Categories
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.NoCategories
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.BlankCategory
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
+import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -21,11 +29,13 @@ import java.util.*
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val financeRepository: FinanceRepository
+    private val financeRepository: FinanceRepository,
+    private val dispatcherProvider: DispatcherProvider
 ) : ViewModel() {
 
     private val _actionChannel = Channel<HomeScreenAction>(capacity = Channel.UNLIMITED)
-    private val _homeScreenUiState = MutableSharedFlow<HomeScreenUiState>()
+    private val _categoryLoadingState: MutableStateFlow<CategoryState> = MutableStateFlow(Initializing)
+    private val _uhOhs: MutableStateFlow<UhOh> = MutableStateFlow(NoUhOh)
     private val _categories = MutableStateFlow(emptyList<Category>())
     private val _totalMonthlyExpenses = MutableStateFlow(0f)
 
@@ -35,9 +45,9 @@ class HomeViewModel @Inject constructor(
     val actions: SendChannel<HomeScreenAction> = _actionChannel
 
     /**
-     * An observable containing the [HomeScreenUiState].
+     * The loading state of the categories.
      */
-    val homeScreenUiState: SharedFlow<HomeScreenUiState> = _homeScreenUiState
+    val categoryLoadingState = _categoryLoadingState.asStateFlow()
 
     /**
      * An observable containing the total monthly expenses.
@@ -48,6 +58,11 @@ class HomeViewModel @Inject constructor(
      * An observable containing the list of created categories.
      */
     val categories = _categories.asStateFlow()
+
+    /**
+     * Any errors that may occur that a consumer can respond to.
+     */
+    val uhOhs = _uhOhs.asStateFlow()
 
     init {
         _actionChannel.receiveAsFlow()
@@ -63,9 +78,7 @@ class HomeViewModel @Inject constructor(
 
     private fun handleAction(action: HomeScreenAction) {
         when (action) {
-            is CreateNewCategory -> {
-                financeRepository.createCategory(action.categoryName)
-            }
+            is CreateNewCategory -> attemptCategoryCreation(action.categoryName)
             is CreateExpense -> {
                 val expense = Expense(
                     description = action.description,
@@ -84,11 +97,11 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleNoCategories() {
-        _homeScreenUiState.tryEmit(HomeScreenUiState(showCategories = true))
+        _categoryLoadingState.value = NoCategories
     }
 
     private fun handleCategories(categories: List<Category>) {
-        _homeScreenUiState.tryEmit(HomeScreenUiState(showCategories = false))
+        _categoryLoadingState.value = Categories
         _categories.value = arrayListOf<Category>().apply { addAll(categories) }
         updateTotalExpenses(categories = categories)
     }
@@ -101,16 +114,38 @@ class HomeViewModel @Inject constructor(
         _totalMonthlyExpenses.value = totalMonthlyExpenses
     }
 
-    /**
-     * The state of the home screen UI.
-     * @param showCategories display the available categories.
-     */
-    data class HomeScreenUiState(
-        val showCategories: Boolean = false
-    )
+    private fun attemptCategoryCreation(categoryName: String) {
+        viewModelScope.launch(dispatcherProvider.default()) {
+            when {
+                categoryName.isEmpty() -> _uhOhs.value = BlankCategory
+                financeRepository.categoryExists(categoryName) -> {
+                    _uhOhs.value = CategoryAlreadyExists(categoryName)
+                }
+                else -> financeRepository.createCategory(categoryName)
+            }
+        }
+    }
 
     /**
-     * Various actions this viewmodel will accept from the UI.
+     * Represents the loading state of the [categories].
+     */
+    sealed class CategoryState {
+        object Initializing : CategoryState()
+        object Categories : CategoryState()
+        object NoCategories : CategoryState()
+    }
+
+    /**
+     * Various errors for the consumer to handle.
+     */
+    sealed class UhOh {
+        object NoUhOh : UhOh()
+        object BlankCategory : UhOh()
+        data class CategoryAlreadyExists(val categoryName: String) : UhOh()
+    }
+
+    /**
+     * Various actions this view model will accept from the UI.
      */
     sealed class HomeScreenAction {
         data class CreateNewCategory(val categoryName: String) : HomeScreenAction()
