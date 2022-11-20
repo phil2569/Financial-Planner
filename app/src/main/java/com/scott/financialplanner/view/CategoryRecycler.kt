@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,13 +39,13 @@ fun CategoryRecycler(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ) {
-    val categories = viewModel.categories.collectAsState().value
+    val categoryList = viewModel.categories.collectAsState().value
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 30.dp)
     ) {
-        items(categories) { category ->
+        items(categoryList.categories) { category ->
             CategoryCard(
                 category = category,
                 deleteCategoryListener = { category ->
@@ -217,17 +219,17 @@ fun ExpenseContent(
     historyListener: ((String) -> Unit)? = null,
     addExpenseListener: ((String, String, Float) -> Unit)? = null
 ) {
-    ConstraintLayout(
+    var showNewExpense by remember { mutableStateOf(false) }
+    var newExpenseDescription by remember { mutableStateOf("") }
+    var newExpenseAmount by remember { mutableStateOf("") }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        val (totalText, historyAddContainer) = createRefs()
 
         Row(modifier = Modifier
-            .constrainAs(historyAddContainer) {
-                top.linkTo(totalText.bottom)
-            }
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(top = 30.dp),
@@ -244,11 +246,81 @@ fun ExpenseContent(
             Image(
                 modifier = Modifier
                     .clickable {
-                        addExpenseListener?.invoke("description", category.name, 0f)
+                        showNewExpense = true
                     },
                 painter = painterResource(id = R.drawable.ic_add_circle),
                 contentDescription = null
             )
+        }
+
+        // New expense container
+        if (showNewExpense) {
+            val closeNewExpense = {
+                showNewExpense = false
+                newExpenseDescription = ""
+                newExpenseAmount = ""
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(top = 20.dp)
+            ) {
+                Column {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = newExpenseDescription,
+                        onValueChange = {
+                            newExpenseDescription = it
+                        },
+                        label = { Text(stringResource(id = R.string.home_adapter_description)) }
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = newExpenseAmount,
+                        onValueChange = {
+                            newExpenseAmount = it
+                        },
+                        label = { Text(stringResource(id = R.string.home_adapter_amount)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(top = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SecondaryButton(
+                        text = stringResource(id = R.string.home_adapter_cancel_button),
+                        onClick = {
+                            closeNewExpense.invoke()
+                        }
+                    )
+
+                    PrimaryButton(
+                        text = stringResource(id = R.string.home_adapter_save_button),
+                        onClick = {
+                            addExpenseListener?.invoke(
+                                newExpenseDescription,
+                                category.name,
+                                newExpenseAmount.toFloat()
+                            )
+                            closeNewExpense.invoke()
+                        }
+                    )
+                }
+            }
         }
     }
 }

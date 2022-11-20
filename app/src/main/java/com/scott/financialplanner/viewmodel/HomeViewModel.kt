@@ -3,6 +3,7 @@ package com.scott.financialplanner.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scott.financialplanner.data.Category
+import com.scott.financialplanner.data.CategoryList
 import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.database.repository.FinanceRepository
 import com.scott.financialplanner.provider.DispatcherProvider
@@ -36,7 +37,7 @@ class HomeViewModel @Inject constructor(
     private val _actionChannel = Channel<HomeScreenAction>(capacity = Channel.UNLIMITED)
     private val _categoryLoadingState: MutableStateFlow<CategoryState> = MutableStateFlow(Initializing)
     private val _uhOhs: MutableStateFlow<UhOh> = MutableStateFlow(NoUhOh)
-    private val _categories = MutableStateFlow(emptyList<Category>())
+    private val _categories = MutableStateFlow(CategoryList())
     private val _totalMonthlyExpenses = MutableStateFlow(0f)
 
     /**
@@ -70,7 +71,7 @@ class HomeViewModel @Inject constructor(
             .launchIn(viewModelScope)
         financeRepository.categories.onEach {
             when {
-                it.isEmpty() -> handleNoCategories()
+                it.categories.isEmpty() -> handleNoCategories()
                 else -> handleCategories(it)
             }
         }.launchIn(viewModelScope)
@@ -100,10 +101,10 @@ class HomeViewModel @Inject constructor(
         _categoryLoadingState.value = NoCategories
     }
 
-    private fun handleCategories(categories: List<Category>) {
+    private fun handleCategories(categoryList: CategoryList) {
         _categoryLoadingState.value = Categories
-        _categories.value = arrayListOf<Category>().apply { addAll(categories) }
-        updateTotalExpenses(categories = categories)
+        _categories.value = categoryList
+        updateTotalExpenses(categories = categoryList.categories)
     }
 
     private fun updateTotalExpenses(categories: List<Category>) {

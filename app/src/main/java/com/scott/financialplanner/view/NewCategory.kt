@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -48,20 +47,23 @@ fun NewCategory(
                     viewModel
                 )
             }
-            Button(modifier = Modifier.fillMaxWidth(),
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.home_new_category),
                 onClick = {
                     showInputState.value = true
-                }) {
-                Text(text = stringResource(id = R.string.home_new_category).uppercase())
-            }
+                }
+            )
         }
     }
 }
 
+
 @Composable
 private fun NewCategoryInput(
     showInputState: MutableState<Boolean>,
-    viewModel: HomeViewModel) {
+    viewModel: HomeViewModel
+) {
     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
         val (cancel, accept, newCategoryTextField) = createRefs()
         val focusRequester = remember { FocusRequester() }
