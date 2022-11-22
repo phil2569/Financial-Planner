@@ -1,5 +1,6 @@
 package com.scott.financialplanner.view
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -58,12 +59,9 @@ private fun HandleUhOhs(viewModel: HomeViewModel) {
 
     when (uhOh) {
         NoUhOh -> { /* Alright, alright, alright */ }
-        is CategoryAlreadyExists -> {
-            Toast.makeText(context, "${uhOh.categoryName} Already Exists!", Toast.LENGTH_SHORT).show()
-        }
-        UhOh.BlankCategory -> {
-            Toast.makeText(context, "Category must not be empty!", Toast.LENGTH_SHORT).show()
-        }
+        is CategoryAlreadyExists -> makeToast(context, "${uhOh.categoryName} Already Exists!")
+        UhOh.BlankCategory -> makeToast(context, "Category must not be empty!")
+        UhOh.MissingNewExpenseInfo -> makeToast(context, "Description and Amount can't be empty!")
     }
 }
 
@@ -114,4 +112,8 @@ private fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
 @Composable
 private fun HomeActivityPreview() {
     HomeScreen()
+}
+
+private fun makeToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }

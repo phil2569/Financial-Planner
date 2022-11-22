@@ -82,7 +82,7 @@ private fun CategoryCard(
     deleteCategoryListener: ((String) -> Unit)? = null,
     updateCategoryListener: ((String, String) -> Unit)? = null,
     historyListener: ((String) -> Unit)? = null,
-    addExpenseListener: ((String, String, Float) -> Unit)? = null
+    addExpenseListener: ((String, String, String) -> Unit)? = null
 ) {
     DefaultCard(modifier = Modifier.padding(bottom = 30.dp)) {
         Column(
@@ -217,7 +217,7 @@ fun CategoryContent(
 fun ExpenseContent(
     category: Category,
     historyListener: ((String) -> Unit)? = null,
-    addExpenseListener: ((String, String, Float) -> Unit)? = null
+    addExpenseListener: ((String, String, String) -> Unit)? = null
 ) {
     var showNewExpense by remember { mutableStateOf(false) }
     var newExpenseDescription by remember { mutableStateOf("") }
@@ -229,10 +229,11 @@ fun ExpenseContent(
             .wrapContentHeight()
     ) {
 
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(top = 30.dp),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(top = 30.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Image(
@@ -304,7 +305,7 @@ fun ExpenseContent(
                     SecondaryButton(
                         text = stringResource(id = R.string.home_adapter_cancel_button),
                         onClick = {
-                            closeNewExpense.invoke()
+                            closeNewExpense?.invoke()
                         }
                     )
 
@@ -314,7 +315,7 @@ fun ExpenseContent(
                             addExpenseListener?.invoke(
                                 newExpenseDescription,
                                 category.name,
-                                newExpenseAmount.toFloat()
+                                newExpenseAmount
                             )
                             closeNewExpense.invoke()
                         }
