@@ -9,11 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun DefaultCard(
     modifier: Modifier = Modifier,
+    elevation: Dp = 6.dp,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -21,7 +23,7 @@ fun DefaultCard(
             .padding(start = 10.dp, end = 10.dp)
             .fillMaxWidth()
             .wrapContentHeight(),
-        elevation = 6.dp,
+        elevation = elevation,
         backgroundColor = Color.White
     ) {
         content.invoke()

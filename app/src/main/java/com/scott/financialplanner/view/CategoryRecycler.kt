@@ -1,11 +1,13 @@
 package com.scott.financialplanner.view
 
 import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.scott.financialplanner.R
@@ -42,13 +45,17 @@ fun CategoryRecycler(
     categories: List<Category>,
     homeScreenActions: SendChannel<HomeViewModel.HomeScreenAction>
 ) {
+    val listState = rememberLazyListState()
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 30.dp)
+        contentPadding = PaddingValues(bottom = 30.dp),
+        state = listState
     ) {
-        items(categories) { category ->
+        itemsIndexed(categories) { index, category ->
             CategoryCard(
                 category = category,
+                state = listState,
+                index = index,
                 deleteCategoryListener = { category ->
                     homeScreenActions.trySend(DeleteCategory(category))
                 },
@@ -80,27 +87,57 @@ fun CategoryRecycler(
 @Composable
 private fun CategoryCard(
     category: Category,
+    state: LazyListState,
+    index: Int,
     deleteCategoryListener: ((String) -> Unit)? = null,
     updateCategoryListener: ((String, String) -> Unit)? = null,
     historyListener: ((String) -> Unit)? = null,
     addExpenseListener: ((String, String, String) -> Unit)? = null
 ) {
-    DefaultCard(modifier = Modifier.padding(bottom = 30.dp)) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(20.dp)
-        ) {
+    ConstraintLayout {
+        val showNewExpense = remember { mutableStateOf(false) }
 
-            CategoryContent(
+        val (mainContent, expenseContent) = createRefs()
+
+        LaunchedEffect(key1 = showNewExpense) {
+            if (showNewExpense.value) {
+                state.animateScrollToItem(index)
+            }
+        }
+
+        AnimatedVisibility(
+            showNewExpense.value,
+            modifier = Modifier.constrainAs(expenseContent) {
+                top.linkTo(mainContent.bottom)
+            },
+            enter = slideIn(tween(500, easing = LinearOutSlowInEasing)) { fullSize ->
+                IntOffset(0, -fullSize.height)
+            } + fadeIn(initialAlpha = 0f),
+            exit = slideOut(tween(500, easing = LinearOutSlowInEasing)) { fullSize ->
+                IntOffset(0, -fullSize.height)
+            } + fadeOut(),
+        ) {
+            DefaultCard {
+                NewExpense(
+                    category = category,
+                    showNewExpense = showNewExpense,
+                    addExpenseListener = addExpenseListener
+                )
+            }
+       }
+
+        val elevation = if (showNewExpense.value) 0.dp else 6.dp
+        DefaultCard(modifier = Modifier
+            .padding(top = 30.dp)
+            .constrainAs(mainContent) {
+                top.linkTo(parent.top)
+                bottom.linkTo(expenseContent.top)
+            }, elevation = elevation) {
+            MainContent(
                 category = category,
+                showNewExpense = showNewExpense,
                 deleteCategoryListener = deleteCategoryListener,
-                updateCategoryListener = updateCategoryListener
-            )
-            ExpenseContent(
-                category = category,
-                addExpenseListener = addExpenseListener,
+                updateCategoryListener = updateCategoryListener,
                 historyListener = historyListener
             )
         }
@@ -108,18 +145,53 @@ private fun CategoryCard(
 }
 
 @Composable
-fun CategoryContent(
+fun MainContent(
     category: Category,
+    showNewExpense: MutableState<Boolean>,
+    deleteCategoryListener: ((String) -> Unit)? = null,
+    updateCategoryListener: ((String, String) -> Unit)? = null,
+    historyListener: ((String) -> Unit)? = null,
+) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+
+            Header(
+                originalCategoryName = category.name,
+                deleteCategoryListener = deleteCategoryListener,
+                updateCategoryListener = updateCategoryListener
+            )
+
+            CategoryTotal(
+                modifier = Modifier.padding(top = 30.dp, start = 30.dp, end = 30.dp),
+                categoryExpenseTotal = category.expenseTotal
+            )
+
+            ExpenseButtons(
+                modifier = Modifier.padding(top = 30.dp),
+                categoryName = category.name,
+                historyListener = historyListener,
+                showNewExpense = showNewExpense
+            )
+        }
+}
+
+/**
+ * Represents the top row in the card.
+ * Contains the delete button, category name, and edit button.
+ */
+@Composable
+fun Header(
+    originalCategoryName: String,
     deleteCategoryListener: ((String) -> Unit)? = null,
     updateCategoryListener: ((String, String) -> Unit)? = null,
 ) {
-    var categoryName by remember { mutableStateOf(category.name) }
+    var updatedCategoryName by remember { mutableStateOf(originalCategoryName) }
     var editModeEnabled by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-
-    // reset the value. I don't actually want to remember it, but compose complains about using
-    // mutableStateOf without remember.
-    categoryName = category.name
 
     LaunchedEffect(editModeEnabled) {
         if (editModeEnabled) {
@@ -127,216 +199,206 @@ fun CategoryContent(
         }
     }
 
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-    ) {
-        val (header, totalText, totalValue) = createRefs()
-
-        Row(
-            modifier = Modifier.constrainAs(header) {},
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            if (!editModeEnabled) {
-                Image(
-                    modifier = Modifier
-                        .clickable {
-                            deleteCategoryListener?.invoke(category.name)
-                        }
-                        .width(24.dp)
-                        .height(24.dp),
-                    painter = painterResource(
-                        id = R.drawable.ic_delete
-                    ), contentDescription = null
-                )
-            }
-
-            BasicTextField(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .weight(1f)
-                    .padding(start = 10.dp, end = 10.dp)
-                    .focusRequester(focusRequester),
-                value = categoryName,
-                onValueChange = {
-                    categoryName = it
-                },
-                textStyle = MaterialTheme.typography.h3.copy(textAlign = TextAlign.Center),
-                enabled = editModeEnabled,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        editModeEnabled = false
-                        updateCategoryListener?.invoke(
-                            category.name,
-                            categoryName
-                        )
-                    }
-                )
-            )
-
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!editModeEnabled) {
             Image(
                 modifier = Modifier
                     .clickable {
-                        editModeEnabled = !editModeEnabled
+                        deleteCategoryListener?.invoke(originalCategoryName)
                     }
                     .width(24.dp)
                     .height(24.dp),
                 painter = painterResource(
-                    id = if (editModeEnabled) R.drawable.ic_cancel else R.drawable.ic_edit
+                    id = R.drawable.ic_delete
                 ), contentDescription = null
             )
         }
 
-        Text(
+        BasicTextField(
             modifier = Modifier
-                .constrainAs(totalText) {
-                    top.linkTo(header.bottom)
-                    start.linkTo(parent.start)
+                .wrapContentSize()
+                .weight(1f)
+                .padding(start = 10.dp, end = 10.dp)
+                .focusRequester(focusRequester),
+            value = updatedCategoryName,
+            onValueChange = {
+                updatedCategoryName = it
+            },
+            textStyle = MaterialTheme.typography.h3.copy(textAlign = TextAlign.Center),
+            enabled = editModeEnabled,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    editModeEnabled = false
+                    updateCategoryListener?.invoke(
+                        originalCategoryName,
+                        updatedCategoryName
+                    )
                 }
-                .padding(top = 30.dp),
+            )
+        )
+
+        Image(
+            modifier = Modifier
+                .clickable {
+                    editModeEnabled = !editModeEnabled
+                }
+                .width(24.dp)
+                .height(24.dp),
+            painter = painterResource(
+                id = if (editModeEnabled) R.drawable.ic_cancel else R.drawable.ic_edit
+            ), contentDescription = null
+        )
+    }
+}
+
+/**
+ * Represents the second row in the card.
+ * Displays the category expense total.
+ */
+@Composable
+fun CategoryTotal(
+    categoryExpenseTotal: Float,
+    modifier: Modifier = Modifier
+) {
+    ConstraintLayout(modifier = modifier.fillMaxWidth()) {
+        val (totalText, totalValue) = createRefs()
+        Text(
+            modifier = Modifier.constrainAs(totalText) {
+                start.linkTo(parent.start)
+            },
             text = stringResource(id = R.string.home_adapter_total),
             style = MaterialTheme.typography.body1
         )
 
         Text(
-            modifier = Modifier
-                .constrainAs(totalValue) {
-                    top.linkTo(totalText.top)
-                    end.linkTo(parent.end)
-                }
-                .padding(top = 30.dp),
-            text = NumberFormat.getCurrencyInstance(Locale.US).format(category.expenseTotal),
+            modifier = Modifier.constrainAs(totalValue) {
+                end.linkTo(parent.end)
+            },
+            text = NumberFormat.getCurrencyInstance(Locale.US).format(categoryExpenseTotal),
             style = MaterialTheme.typography.body1
         )
     }
 }
 
+/**
+ * Represents the 3rd row in the card.
+ * Contains the history and add expense buttons.
+ */
 @Composable
-fun ExpenseContent(
-    category: Category,
+fun ExpenseButtons(
+    modifier: Modifier = Modifier,
+    categoryName: String,
+    showNewExpense: MutableState<Boolean>,
     historyListener: ((String) -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Image(
+            modifier = Modifier
+                .clickable {
+                    historyListener?.invoke(categoryName)
+                },
+            painter = painterResource(id = R.drawable.ic_history), contentDescription = null
+        )
+
+        Image(
+            modifier = Modifier
+                .clickable {
+                    showNewExpense.value = true
+                },
+            painter = painterResource(id = R.drawable.ic_add_circle),
+            contentDescription = null
+        )
+    }
+}
+
+/**
+ * The new expense container.
+ * Hides behind the MainContent until the new expense button is pressed.
+ */
+@Composable
+fun NewExpense(
+    category: Category,
+    showNewExpense: MutableState<Boolean>,
     addExpenseListener: ((String, String, String) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    var showNewExpense by remember { mutableStateOf(false) }
     var newExpenseDescription by remember { mutableStateOf("") }
     var newExpenseAmount by remember { mutableStateOf("") }
     val emptyContentMessage = stringResource(id = R.string.home_empty_description_or_price)
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-    ) {
-
-        Row(
+        Column(
             modifier = Modifier
+                .padding(top = 0.dp, start = 30.dp, end = 30.dp, bottom = 30.dp)
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(top = 30.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Image(
-                modifier = Modifier
-                    .clickable {
-                        historyListener?.invoke(category.name)
-                    },
-                painter = painterResource(id = R.drawable.ic_history), contentDescription = null
-            )
 
-            Image(
-                modifier = Modifier
-                    .clickable {
-                        showNewExpense = true
-                    },
-                painter = painterResource(id = R.drawable.ic_add_circle),
-                contentDescription = null
-            )
-        }
-
-        // New expense container
-        if (showNewExpense) {
             val closeNewExpense = {
-                showNewExpense = false
+                showNewExpense.value = false
                 newExpenseDescription = ""
                 newExpenseAmount = ""
             }
 
-            Column(
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = newExpenseDescription,
+                onValueChange = {
+                    newExpenseDescription = it
+                },
+                label = { Text(stringResource(id = R.string.home_adapter_description)) }
+            )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = newExpenseAmount,
+                onValueChange = {
+                    newExpenseAmount = it
+                },
+                label = { Text(stringResource(id = R.string.home_adapter_amount)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(top = 20.dp)
+                    .padding(top = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Column {
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = newExpenseDescription,
-                        onValueChange = {
-                            newExpenseDescription = it
-                        },
-                        label = { Text(stringResource(id = R.string.home_adapter_description)) }
-                    )
-                }
+                SecondaryButton(
+                    text = stringResource(id = R.string.home_adapter_cancel_button),
+                    onClick = {
+                        closeNewExpense.invoke()
+                    }
+                )
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                ) {
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = newExpenseAmount,
-                        onValueChange = {
-                            newExpenseAmount = it
-                        },
-                        label = { Text(stringResource(id = R.string.home_adapter_amount)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(top = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    SecondaryButton(
-                        text = stringResource(id = R.string.home_adapter_cancel_button),
-                        onClick = {
+                PrimaryButton(
+                    text = stringResource(id = R.string.home_adapter_save_button),
+                    onClick = {
+                        if (newExpenseDescription.isEmpty() ||
+                            newExpenseAmount.isEmpty()
+                        ) {
+                            Toast.makeText(context, emptyContentMessage, Toast.LENGTH_SHORT).show()
+                        } else {
+                            addExpenseListener?.invoke(
+                                newExpenseDescription,
+                                category.name,
+                                newExpenseAmount
+                            )
                             closeNewExpense.invoke()
                         }
-                    )
-
-                    PrimaryButton(
-                        text = stringResource(id = R.string.home_adapter_save_button),
-                        onClick = {
-                            if (newExpenseDescription.isEmpty() ||
-                                    newExpenseAmount.isEmpty()) {
-                                Toast.makeText(context, emptyContentMessage, Toast.LENGTH_SHORT).show()
-                            } else {
-                                addExpenseListener?.invoke(
-                                    newExpenseDescription,
-                                    category.name,
-                                    newExpenseAmount
-                                )
-                                closeNewExpense.invoke()
-                            }
-                        }
-                    )
-                }
+                    }
+                )
             }
         }
-    }
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun CategoryCardPreview() {
-    CategoryCard(category = Category("Category", 2f))
+    //CategoryCard(category = Category("Category", 2f))
 }

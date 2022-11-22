@@ -7,9 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -27,7 +25,6 @@ import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.HomeViewModel
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initialized
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
-import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
 import dagger.hilt.android.AndroidEntryPoint
