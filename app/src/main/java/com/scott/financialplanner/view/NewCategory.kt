@@ -1,5 +1,6 @@
 package com.scott.financialplanner.view
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,6 +66,9 @@ private fun NewCategoryInput(
     showInputState: MutableState<Boolean>,
     viewModel: HomeViewModel
 ) {
+    val context = LocalContext.current
+    val emptyCategoryMessage = stringResource(id = R.string.home_empty_category)
+
     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
         val (cancel, accept, newCategoryTextField) = createRefs()
         val focusRequester = remember { FocusRequester() }
@@ -105,8 +110,12 @@ private fun NewCategoryInput(
                     bottom.linkTo(newCategoryTextField.bottom)
                 }
                 .clickable {
-                    showInputState.value = false
-                    viewModel.actions.trySend(CreateNewCategory(newCategoryName))
+                    if (newCategoryName.isEmpty()) {
+                        Toast.makeText(context, emptyCategoryMessage, Toast.LENGTH_SHORT).show()
+                    } else {
+                        showInputState.value = false
+                        viewModel.actions.trySend(CreateNewCategory(newCategoryName))
+                    }
                 },
             painter = painterResource(id = R.drawable.ic_check),
             contentDescription = null

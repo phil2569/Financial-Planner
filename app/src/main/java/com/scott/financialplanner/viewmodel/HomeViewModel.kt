@@ -12,9 +12,7 @@ import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.Delet
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initialized
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
-import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.BlankCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
-import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.MissingNewExpenseInfo
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -74,8 +72,8 @@ class HomeViewModel @Inject constructor(
 
     private fun handleAction(action: HomeScreenAction) {
         when (action) {
-            is CreateNewCategory -> attemptCategoryCreation(action.categoryName)
-            is CreateExpense -> attemptExpenseCreation(action.description, action.amount, action.associatedCategory)
+            is CreateNewCategory -> createCategory(action.categoryName)
+            is CreateExpense -> createExpense(action.description, action.amount, action.associatedCategory)
             is DeleteCategory -> financeRepository.deleteCategory(action.categoryName)
             is UpdateCategoryName -> financeRepository.editCategoryName(
                 action.currentName,
@@ -97,10 +95,9 @@ class HomeViewModel @Inject constructor(
         _totalMonthlyExpenses.value = totalMonthlyExpenses
     }
 
-    private fun attemptCategoryCreation(categoryName: String) {
+    private fun createCategory(categoryName: String) {
         viewModelScope.launch(dispatcherProvider.default()) {
             when {
-                categoryName.isEmpty() -> _uhOhs.value = BlankCategory
                 financeRepository.categoryExists(categoryName) -> {
                     _uhOhs.value = CategoryAlreadyExists(categoryName)
                 }
@@ -109,26 +106,18 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun attemptExpenseCreation(
+    private fun createExpense(
         expenseDescription: String,
         expenseAmount: String,
         associatedCategory: String
     ) {
-        viewModelScope.launch(dispatcherProvider.default()) {
-            when {
-                expenseDescription.isEmpty() ||
-                expenseAmount.isEmpty() -> _uhOhs.value = MissingNewExpenseInfo
-                else -> {
-                    val expense = Expense(
-                        description = expenseDescription,
-                        amount = expenseAmount.toFloat(),
-                        associatedCategory = associatedCategory,
-                        dateCreated = Calendar.getInstance()
-                    )
-                    financeRepository.createExpense(expense)
-                }
-            }
-        }
+        val expense = Expense(
+            description = expenseDescription,
+            amount = expenseAmount.toFloat(),
+            associatedCategory = associatedCategory,
+            dateCreated = Calendar.getInstance()
+        )
+        financeRepository.createExpense(expense)
     }
 
     /**
@@ -144,9 +133,7 @@ class HomeViewModel @Inject constructor(
      */
     sealed class UhOh {
         object NoUhOh : UhOh()
-        object BlankCategory : UhOh()
         data class CategoryAlreadyExists(val categoryName: String) : UhOh()
-        object MissingNewExpenseInfo : UhOh()
     }
 
     /**

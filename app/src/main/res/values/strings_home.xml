@@ -4,8 +4,8 @@
     <string name="home_new_no_categories">Say hi to baby Kev! \nThen create a new category to begin tracking your expenses.</string>
     <string name="home_new_category">New Category</string>
     <string name="home_total_monthly_expenses">Total Expenses:</string>
-    <string name="home_empty_category">Category must not be empty</string>
-    <string name="home_empty_description_or_price">Description and expense must not be empty</string>
+    <string name="home_empty_category">Category must not be empty!</string>
+    <string name="home_empty_description_or_price">"Description and Amount can't be empty!"</string>
     <string name="home_category_exists">Category already exists</string>
 
     <!--Home Adapter Strings-->

@@ -1,5 +1,6 @@
 package com.scott.financialplanner.view
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -218,9 +220,11 @@ fun ExpenseContent(
     historyListener: ((String) -> Unit)? = null,
     addExpenseListener: ((String, String, String) -> Unit)? = null
 ) {
+    val context = LocalContext.current
     var showNewExpense by remember { mutableStateOf(false) }
     var newExpenseDescription by remember { mutableStateOf("") }
     var newExpenseAmount by remember { mutableStateOf("") }
+    val emptyContentMessage = stringResource(id = R.string.home_empty_description_or_price)
 
     Column(
         modifier = Modifier
@@ -304,19 +308,24 @@ fun ExpenseContent(
                     SecondaryButton(
                         text = stringResource(id = R.string.home_adapter_cancel_button),
                         onClick = {
-                            closeNewExpense?.invoke()
+                            closeNewExpense.invoke()
                         }
                     )
 
                     PrimaryButton(
                         text = stringResource(id = R.string.home_adapter_save_button),
                         onClick = {
-                            addExpenseListener?.invoke(
-                                newExpenseDescription,
-                                category.name,
-                                newExpenseAmount
-                            )
-                            closeNewExpense.invoke()
+                            if (newExpenseDescription.isEmpty() ||
+                                    newExpenseAmount.isEmpty()) {
+                                Toast.makeText(context, emptyContentMessage, Toast.LENGTH_SHORT).show()
+                            } else {
+                                addExpenseListener?.invoke(
+                                    newExpenseDescription,
+                                    category.name,
+                                    newExpenseAmount
+                                )
+                                closeNewExpense.invoke()
+                            }
                         }
                     )
                 }

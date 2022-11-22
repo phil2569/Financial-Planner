@@ -59,8 +59,6 @@ private fun HandleUhOhs(viewModel: HomeViewModel) {
     when (uhOh) {
         NoUhOh -> { /* Alright, alright, alright */ }
         is CategoryAlreadyExists -> makeToast(context, "${uhOh.categoryName} Already Exists!")
-        UhOh.BlankCategory -> makeToast(context, "Category must not be empty!")
-        UhOh.MissingNewExpenseInfo -> makeToast(context, "Description and Amount can't be empty!")
     }
 }
 
