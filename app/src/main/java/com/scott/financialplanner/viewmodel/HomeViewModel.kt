@@ -3,7 +3,6 @@ package com.scott.financialplanner.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scott.financialplanner.data.Category
-import com.scott.financialplanner.data.CategoryList
 import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.database.repository.FinanceRepository
 import com.scott.financialplanner.provider.DispatcherProvider
@@ -11,9 +10,8 @@ import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.Creat
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateExpense
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.DeleteCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
-import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Categories
+import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initialized
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
-import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.NoCategories
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.BlankCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.MissingNewExpenseInfo
@@ -38,7 +36,6 @@ class HomeViewModel @Inject constructor(
     private val _actionChannel = Channel<HomeScreenAction>(capacity = Channel.UNLIMITED)
     private val _categoryLoadingState: MutableStateFlow<CategoryState> = MutableStateFlow(Initializing)
     private val _uhOhs: MutableStateFlow<UhOh> = MutableStateFlow(NoUhOh)
-    private val _categories = MutableStateFlow(CategoryList())
     private val _totalMonthlyExpenses = MutableStateFlow(0f)
 
     /**
@@ -59,7 +56,7 @@ class HomeViewModel @Inject constructor(
     /**
      * An observable containing the list of created categories.
      */
-    val categories = _categories.asStateFlow()
+    val categories: SharedFlow<List<Category>> = financeRepository.categories
 
     /**
      * Any errors that may occur that a consumer can respond to.
@@ -71,10 +68,7 @@ class HomeViewModel @Inject constructor(
             .onEach { handleAction(it) }
             .launchIn(viewModelScope)
         financeRepository.categories.onEach {
-            when {
-                it.categories.isEmpty() -> handleNoCategories()
-                else -> handleCategories(it)
-            }
+            handleCategories(it)
         }.launchIn(viewModelScope)
     }
 
@@ -90,14 +84,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun handleNoCategories() {
-        _categoryLoadingState.value = NoCategories
-    }
-
-    private fun handleCategories(categoryList: CategoryList) {
-        _categoryLoadingState.value = Categories
-        _categories.value = categoryList
-        updateTotalExpenses(categories = categoryList.categories)
+    private fun handleCategories(categories: List<Category>) {
+        _categoryLoadingState.value = Initialized
+        updateTotalExpenses(categories = categories)
     }
 
     private fun updateTotalExpenses(categories: List<Category>) {
@@ -147,8 +136,7 @@ class HomeViewModel @Inject constructor(
      */
     sealed class CategoryState {
         object Initializing : CategoryState()
-        object Categories : CategoryState()
-        object NoCategories : CategoryState()
+        object Initialized : CategoryState()
     }
 
     /**

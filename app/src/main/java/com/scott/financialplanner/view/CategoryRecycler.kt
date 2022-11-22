@@ -24,35 +24,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Category
 import com.scott.financialplanner.viewmodel.HomeViewModel
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateExpense
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.DeleteCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
+import kotlinx.coroutines.channels.SendChannel
 import java.text.NumberFormat
 import java.util.*
 
 @Composable
 fun CategoryRecycler(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel()
+    categories: List<Category>,
+    homeScreenActions: SendChannel<HomeViewModel.HomeScreenAction>
 ) {
-    val categoryList = viewModel.categories.collectAsState().value
-
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 30.dp)
     ) {
-        items(categoryList.categories) { category ->
+        items(categories) { category ->
             CategoryCard(
                 category = category,
                 deleteCategoryListener = { category ->
-                    viewModel.actions.trySend(DeleteCategory(category))
+                    homeScreenActions.trySend(DeleteCategory(category))
                 },
                 updateCategoryListener = { currentName, newName ->
-                    viewModel.actions.trySend(
+                    homeScreenActions.trySend(
                         UpdateCategoryName(
                             currentName = currentName,
                             newName = newName
@@ -63,7 +62,7 @@ fun CategoryRecycler(
                     //viewModel.actions.trySend(His) todo
                 },
                 addExpenseListener = { description, category, amount ->
-                    viewModel.actions.trySend(
+                    homeScreenActions.trySend(
                         CreateExpense(
                             associatedCategory = category,
                             description = description,
@@ -291,7 +290,7 @@ fun ExpenseContent(
                             newExpenseAmount = it
                         },
                         label = { Text(stringResource(id = R.string.home_adapter_amount)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
 

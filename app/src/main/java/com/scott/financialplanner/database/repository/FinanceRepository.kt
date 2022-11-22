@@ -1,7 +1,6 @@
 package com.scott.financialplanner.database.repository
 
 import com.scott.financialplanner.data.Category
-import com.scott.financialplanner.data.CategoryList
 import com.scott.financialplanner.data.Expense
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -11,9 +10,9 @@ import kotlinx.coroutines.flow.SharedFlow
 interface FinanceRepository {
 
     /**
-     * An observable that emits a [CategoryList]s containing a list of [Category].
+     * An observable that emits a list of [Category].
      */
-    val categories: SharedFlow<CategoryList>
+    val categories: SharedFlow<List<Category>>
 
     /**
      * Creates a new [Category].

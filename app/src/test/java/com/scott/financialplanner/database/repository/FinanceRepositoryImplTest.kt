@@ -11,7 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class FinanceRepositoryTestImpl {
+class FinanceRepositoryImplTest {
 
     @get:Rule
     val dispatcherRule = TestDispatcherRule()

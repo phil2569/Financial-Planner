@@ -1,7 +1,6 @@
 package com.scott.financialplanner.database.repository
 
 import com.scott.financialplanner.data.Category
-import com.scott.financialplanner.data.CategoryList
 import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.provider.DispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -18,8 +17,8 @@ internal class FinanceRepositoryImpl(
 
     private val cachedCategories = arrayListOf<Category>()
 
-    private val _categories = MutableStateFlow(CategoryList())
-    override val categories = _categories.asStateFlow()
+    private val _categories = MutableSharedFlow<List<Category>>()
+    override val categories = _categories.asSharedFlow()
 
     init {
         coroutineScope.launch {
@@ -32,7 +31,7 @@ internal class FinanceRepositoryImpl(
                     )
                 )
             }
-            _categories.value = cachedCategories.toCategoryList()
+            _categories.emit(cachedCategories)
         }
     }
 
@@ -40,7 +39,7 @@ internal class FinanceRepositoryImpl(
         coroutineScope.launch {
             cachedCategories.add(Category(name = name, 0f))
             categoryRepository.insertCategory(name)
-            _categories.value = cachedCategories.toCategoryList()
+            _categories.emit(cachedCategories)
         }
     }
 
@@ -49,7 +48,7 @@ internal class FinanceRepositoryImpl(
             getCachedCategory(expense.associatedCategory)?.let {
                 it.expenseTotal += expense.amount
                 expenseRepository.insertExpense(expense)
-                _categories.value = cachedCategories.toCategoryList()
+                _categories.emit(cachedCategories)
             }
         }
     }
@@ -59,7 +58,7 @@ internal class FinanceRepositoryImpl(
             removeCachedCategory(name)
             categoryRepository.deleteCategory(name)
             expenseRepository.deleteAllCategoryExpenses(name)
-            _categories.value = cachedCategories.toCategoryList()
+            _categories.emit(cachedCategories)
         }
     }
 
@@ -68,7 +67,7 @@ internal class FinanceRepositoryImpl(
             getCachedCategory(expense.associatedCategory)?.let {
                 it.expenseTotal -= expense.amount
                 expenseRepository.deleteExpense(expense)
-                _categories.value = cachedCategories.toCategoryList()
+                _categories.emit(cachedCategories)
             }
         }
     }
@@ -79,7 +78,7 @@ internal class FinanceRepositoryImpl(
                 it.name = newName
                 categoryRepository.updateCategoryName(currentName, newName)
                 expenseRepository.updateCategoryNames(currentName, newName)
-                _categories.value = cachedCategories.toCategoryList()
+                _categories.emit(cachedCategories)
             }
         }
     }
@@ -103,5 +102,3 @@ private fun List<Expense>.sumOfExpenses(): Float {
     forEach { total += it.amount }
     return total
 }
-
-private fun List<Category>.toCategoryList() = CategoryList(this)
