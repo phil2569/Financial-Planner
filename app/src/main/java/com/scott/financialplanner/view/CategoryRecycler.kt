@@ -99,12 +99,6 @@ private fun CategoryCard(
 
         val (mainContent, expenseContent) = createRefs()
 
-        LaunchedEffect(key1 = showNewExpense) {
-            if (showNewExpense.value) {
-                state.animateScrollToItem(index)
-            }
-        }
-
         AnimatedVisibility(
             showNewExpense.value,
             modifier = Modifier.constrainAs(expenseContent) {
@@ -117,6 +111,9 @@ private fun CategoryCard(
                 IntOffset(0, -fullSize.height)
             } + fadeOut(),
         ) {
+            LaunchedEffect(key1 = Unit) {
+                state.animateScrollToItem(index)
+            }
             DefaultCard {
                 NewExpense(
                     category = category,
@@ -124,15 +121,17 @@ private fun CategoryCard(
                     addExpenseListener = addExpenseListener
                 )
             }
-       }
+        }
 
         val elevation = if (showNewExpense.value) 0.dp else 6.dp
-        DefaultCard(modifier = Modifier
-            .padding(top = 30.dp)
-            .constrainAs(mainContent) {
-                top.linkTo(parent.top)
-                bottom.linkTo(expenseContent.top)
-            }, elevation = elevation) {
+        DefaultCard(
+            modifier = Modifier
+                .padding(top = 30.dp)
+                .constrainAs(mainContent) {
+                    top.linkTo(parent.top)
+                    bottom.linkTo(expenseContent.top)
+                }, elevation = elevation
+        ) {
             MainContent(
                 category = category,
                 showNewExpense = showNewExpense,
@@ -152,31 +151,31 @@ fun MainContent(
     updateCategoryListener: ((String, String) -> Unit)? = null,
     historyListener: ((String) -> Unit)? = null,
 ) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth()
-                .wrapContentHeight()
-        ) {
+    Column(
+        modifier = Modifier
+            .padding(20.dp)
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
 
-            Header(
-                originalCategoryName = category.name,
-                deleteCategoryListener = deleteCategoryListener,
-                updateCategoryListener = updateCategoryListener
-            )
+        Header(
+            categoryName = category.name,
+            deleteCategoryListener = deleteCategoryListener,
+            updateCategoryListener = updateCategoryListener
+        )
 
-            CategoryTotal(
-                modifier = Modifier.padding(top = 30.dp, start = 30.dp, end = 30.dp),
-                categoryExpenseTotal = category.expenseTotal
-            )
+        CategoryTotal(
+            modifier = Modifier.padding(top = 30.dp, start = 30.dp, end = 30.dp),
+            categoryTotal = category.expenseTotal
+        )
 
-            ExpenseButtons(
-                modifier = Modifier.padding(top = 30.dp),
-                categoryName = category.name,
-                historyListener = historyListener,
-                showNewExpense = showNewExpense
-            )
-        }
+        ExpenseButtons(
+            modifier = Modifier.padding(top = 30.dp),
+            categoryName = category.name,
+            historyListener = historyListener,
+            showNewExpense = showNewExpense
+        )
+    }
 }
 
 /**
@@ -185,26 +184,19 @@ fun MainContent(
  */
 @Composable
 fun Header(
-    originalCategoryName: String,
+    categoryName: String,
     deleteCategoryListener: ((String) -> Unit)? = null,
     updateCategoryListener: ((String, String) -> Unit)? = null,
 ) {
-    var updatedCategoryName by remember { mutableStateOf(originalCategoryName) }
+    val context = LocalContext.current
     var editModeEnabled by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(editModeEnabled) {
-        if (editModeEnabled) {
-            focusRequester.requestFocus()
-        }
-    }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (!editModeEnabled) {
             Image(
                 modifier = Modifier
                     .clickable {
-                        deleteCategoryListener?.invoke(originalCategoryName)
+                        deleteCategoryListener?.invoke(categoryName)
                     }
                     .width(24.dp)
                     .height(24.dp),
@@ -214,29 +206,47 @@ fun Header(
             )
         }
 
-        BasicTextField(
-            modifier = Modifier
-                .wrapContentSize()
-                .weight(1f)
-                .padding(start = 10.dp, end = 10.dp)
-                .focusRequester(focusRequester),
-            value = updatedCategoryName,
-            onValueChange = {
-                updatedCategoryName = it
-            },
-            textStyle = MaterialTheme.typography.h3.copy(textAlign = TextAlign.Center),
-            enabled = editModeEnabled,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    editModeEnabled = false
-                    updateCategoryListener?.invoke(
-                        originalCategoryName,
-                        updatedCategoryName
-                    )
-                }
+        val categoryTitleModifier = Modifier
+            .wrapContentSize()
+            .weight(1f)
+            .padding(start = 10.dp, end = 10.dp)
+        val categoryTitleStyle = MaterialTheme.typography.h3.copy(textAlign = TextAlign.Center)
+        if (editModeEnabled) {
+            var updatedCategoryName by remember { mutableStateOf(categoryName) }
+            val focusRequester = FocusRequester()
+            val emptyCategoryMessage = stringResource(id = R.string.home_empty_category)
+            BasicTextField(
+                modifier = categoryTitleModifier.focusRequester(focusRequester),
+                value = updatedCategoryName,
+                onValueChange = {
+                    updatedCategoryName = it
+                },
+                textStyle = categoryTitleStyle,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (updatedCategoryName.isEmpty()) {
+                            Toast.makeText(context, emptyCategoryMessage, Toast.LENGTH_SHORT).show()
+                        } else {
+                            editModeEnabled = false
+                            updateCategoryListener?.invoke(
+                                categoryName,
+                                updatedCategoryName
+                            )
+                        }
+                    }
+                )
             )
-        )
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+        } else {
+            Text(
+                modifier = categoryTitleModifier,
+                text = categoryName,
+                style = categoryTitleStyle
+            )
+        }
 
         Image(
             modifier = Modifier
@@ -258,7 +268,7 @@ fun Header(
  */
 @Composable
 fun CategoryTotal(
-    categoryExpenseTotal: Float,
+    categoryTotal: Float,
     modifier: Modifier = Modifier
 ) {
     ConstraintLayout(modifier = modifier.fillMaxWidth()) {
@@ -275,7 +285,7 @@ fun CategoryTotal(
             modifier = Modifier.constrainAs(totalValue) {
                 end.linkTo(parent.end)
             },
-            text = NumberFormat.getCurrencyInstance(Locale.US).format(categoryExpenseTotal),
+            text = NumberFormat.getCurrencyInstance(Locale.US).format(categoryTotal),
             style = MaterialTheme.typography.body1
         )
     }
@@ -332,73 +342,81 @@ fun NewExpense(
     var newExpenseAmount by remember { mutableStateOf("") }
     val emptyContentMessage = stringResource(id = R.string.home_empty_description_or_price)
 
-        Column(
-            modifier = Modifier
-                .padding(top = 0.dp, start = 30.dp, end = 30.dp, bottom = 30.dp)
-                .fillMaxWidth()
-        ) {
+    Column(
+        modifier = Modifier
+            .padding(top = 0.dp, start = 30.dp, end = 30.dp, bottom = 30.dp)
+            .fillMaxWidth()
+    ) {
 
-            val closeNewExpense = {
-                showNewExpense.value = false
-                newExpenseDescription = ""
-                newExpenseAmount = ""
-            }
+        val closeNewExpense = {
+            showNewExpense.value = false
+            newExpenseDescription = ""
+            newExpenseAmount = ""
+        }
 
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = newExpenseDescription,
-                onValueChange = {
-                    newExpenseDescription = it
-                },
-                label = { Text(stringResource(id = R.string.home_adapter_description)) }
-            )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = newExpenseAmount,
-                onValueChange = {
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = newExpenseDescription,
+            onValueChange = {
+                newExpenseDescription = it
+            },
+            label = { Text(stringResource(id = R.string.home_adapter_description)) }
+        )
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = newExpenseAmount,
+            onValueChange = {
+                // Verify it's a float.
+                // KeyboardType.Decimal still allows multiple dots (Dumb, I know).
+                if (!it.contains(".*\\..*\\..*".toRegex())) {
                     newExpenseAmount = it
-                },
-                label = { Text(stringResource(id = R.string.home_adapter_amount)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                }
+            },
+            label = { Text(stringResource(id = R.string.home_adapter_amount)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            SecondaryButton(
+                text = stringResource(id = R.string.home_adapter_cancel_button),
+                onClick = {
+                    closeNewExpense.invoke()
+                }
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                SecondaryButton(
-                    text = stringResource(id = R.string.home_adapter_cancel_button),
-                    onClick = {
+            PrimaryButton(
+                text = stringResource(id = R.string.home_adapter_save_button),
+                onClick = {
+                    if (newExpenseDescription.isEmpty() ||
+                        newExpenseAmount.isEmpty()
+                    ) {
+                        Toast.makeText(context, emptyContentMessage, Toast.LENGTH_SHORT).show()
+                    } else {
+                        addExpenseListener?.invoke(
+                            newExpenseDescription,
+                            category.name,
+                            newExpenseAmount
+                        )
                         closeNewExpense.invoke()
                     }
-                )
-
-                PrimaryButton(
-                    text = stringResource(id = R.string.home_adapter_save_button),
-                    onClick = {
-                        if (newExpenseDescription.isEmpty() ||
-                            newExpenseAmount.isEmpty()
-                        ) {
-                            Toast.makeText(context, emptyContentMessage, Toast.LENGTH_SHORT).show()
-                        } else {
-                            addExpenseListener?.invoke(
-                                newExpenseDescription,
-                                category.name,
-                                newExpenseAmount
-                            )
-                            closeNewExpense.invoke()
-                        }
-                    }
-                )
-            }
+                }
+            )
         }
+    }
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun CategoryCardPreview() {
-    //CategoryCard(category = Category("Category", 2f))
+    CategoryCard(
+        category = Category("Category", 2f),
+        state = LazyListState(),
+        index = 1
+    )
 }

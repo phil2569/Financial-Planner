@@ -1,10 +1,12 @@
 package com.scott.financialplanner.view
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +32,14 @@ fun TotalExpenses(
         ) {
             val (text, amount) = createRefs()
 
+            val totalAnimation by animateFloatAsState(
+                targetValue = totalSpent,
+                animationSpec = tween(
+                    durationMillis = 2000,
+                    easing = FastOutSlowInEasing
+                )
+            )
+
             Text(
                 modifier = Modifier
                     .wrapContentSize()
@@ -47,7 +57,7 @@ fun TotalExpenses(
                         end.linkTo(parent.end)
                     },
                 style = MaterialTheme.typography.h2,
-                text = NumberFormat.getCurrencyInstance(Locale.US).format(totalSpent)
+                text = NumberFormat.getCurrencyInstance(Locale.US).format(totalAnimation)
             )
         }
     }
