@@ -68,7 +68,7 @@ fun CategoryRecycler(
                     )
                 },
                 historyListener = {
-                    //viewModel.actions.trySend(His) todo
+                    homeScreenActions.trySend(HomeViewModel.HomeScreenAction.ExpenseHistoryClicked(it))
                 },
                 addExpenseListener = { description, category, amount ->
                     homeScreenActions.trySend(

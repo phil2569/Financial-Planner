@@ -9,6 +9,7 @@ import com.scott.financialplanner.provider.DispatcherProvider
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateNewCategory
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateExpense
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.DeleteCategory
+import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.ExpenseHistoryClicked
 import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initialized
 import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
@@ -79,6 +80,7 @@ class HomeViewModel @Inject constructor(
                 action.currentName,
                 action.newName
             )
+            is ExpenseHistoryClicked -> _uhOhs.value = UhOh.NavigateToExpenseHistory(action.categoryName)
         }
     }
 
@@ -134,6 +136,7 @@ class HomeViewModel @Inject constructor(
     sealed class UhOh {
         object NoUhOh : UhOh()
         data class CategoryAlreadyExists(val categoryName: String) : UhOh()
+        data class NavigateToExpenseHistory(val categoryName: String): UhOh()
     }
 
     /**
@@ -143,6 +146,7 @@ class HomeViewModel @Inject constructor(
         data class CreateNewCategory(val categoryName: String) : HomeScreenAction()
         data class DeleteCategory(val categoryName: String) : HomeScreenAction()
         data class UpdateCategoryName(val currentName: String, val newName: String) : HomeScreenAction()
+        data class ExpenseHistoryClicked(val categoryName: String) : HomeScreenAction()
 
         data class CreateExpense(
             val associatedCategory: String,

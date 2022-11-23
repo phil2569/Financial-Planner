@@ -5,7 +5,7 @@ import com.scott.financialplanner.data.Expense
 /**
  * Responsible for managing all expenses.
  */
-internal interface ExpenseRepository {
+interface ExpenseRepository {
 
     /**
      * @return The total spent on all expenses.

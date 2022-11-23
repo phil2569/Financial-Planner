@@ -1,6 +1,7 @@
 package com.scott.financialplanner.view
 
 import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Category
+import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.theme.FinancialPlannerTheme
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.HomeViewModel
@@ -28,6 +30,7 @@ import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initiali
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
 import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
 
 /**
  * The Launcher activity.
@@ -56,6 +59,12 @@ private fun HandleUhOhs(viewModel: HomeViewModel) {
     when (uhOh) {
         NoUhOh -> { /* Alright, alright, alright */ }
         is CategoryAlreadyExists -> makeToast(context, "${uhOh.categoryName} Already Exists!")
+        is HomeViewModel.UhOh.NavigateToExpenseHistory -> {
+            val intent = Intent(context, ExpenseHistoryActivity::class.java).apply {
+                putExtra("category_intent", uhOh.categoryName)
+            }
+            context.startActivity(intent)
+        }
     }
 }
 
