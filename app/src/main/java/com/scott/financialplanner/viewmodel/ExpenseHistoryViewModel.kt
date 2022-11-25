@@ -19,7 +19,7 @@ class ExpenseHistoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ): ViewModel(){
 
-    private val categoryName = savedStateHandle.get<String>("category_intent")!!
+    private val categoryName = savedStateHandle.get<String>("category_extra")!!
 
     private val _expenses = MutableStateFlow(emptyList<Expense>())
 

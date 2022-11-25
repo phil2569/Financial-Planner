@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.scott.financialplanner.R
-import com.scott.financialplanner.viewmodel.HomeViewModel
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateNewCategory
+import com.scott.financialplanner.viewmodel.CategoriesViewModel
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.NewCategoryClicked
 
 /**
  * The Composable located at the bottom of the home screen.
@@ -31,7 +31,7 @@ import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.Creat
  */
 @Composable
 fun NewCategory(
-    viewModel: HomeViewModel = viewModel()
+    viewModel: CategoriesViewModel = viewModel()
 ) {
     val showInputState = remember { mutableStateOf(false) }
 
@@ -64,7 +64,7 @@ fun NewCategory(
 @Composable
 private fun NewCategoryInput(
     showInputState: MutableState<Boolean>,
-    viewModel: HomeViewModel
+    viewModel: CategoriesViewModel
 ) {
     val context = LocalContext.current
     val emptyCategoryMessage = stringResource(id = R.string.home_empty_category)
@@ -114,7 +114,7 @@ private fun NewCategoryInput(
                         Toast.makeText(context, emptyCategoryMessage, Toast.LENGTH_SHORT).show()
                     } else {
                         showInputState.value = false
-                        viewModel.actions.trySend(CreateNewCategory(newCategoryName))
+                        viewModel.actions.trySend(NewCategoryClicked(newCategoryName))
                     }
                 },
             painter = painterResource(id = R.drawable.ic_check),

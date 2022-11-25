@@ -31,10 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Category
-import com.scott.financialplanner.viewmodel.HomeViewModel
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.CreateExpense
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.DeleteCategory
-import com.scott.financialplanner.viewmodel.HomeViewModel.HomeScreenAction.UpdateCategoryName
+import com.scott.financialplanner.viewmodel.CategoriesViewModel
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.SaveNewExpenseClicked
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.DeleteCategoryClicked
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.UpdateCategoryClicked
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.ExpenseHistoryClicked
 import kotlinx.coroutines.channels.SendChannel
 import java.text.NumberFormat
 import java.util.*
@@ -43,7 +44,7 @@ import java.util.*
 fun CategoryRecycler(
     modifier: Modifier = Modifier,
     categories: List<Category>,
-    homeScreenActions: SendChannel<HomeViewModel.HomeScreenAction>
+    homeScreenActions: SendChannel<CategoriesViewModel.CategoryAction>
 ) {
     val listState = rememberLazyListState()
     LazyColumn(
@@ -57,22 +58,22 @@ fun CategoryRecycler(
                 state = listState,
                 index = index,
                 deleteCategoryListener = { category ->
-                    homeScreenActions.trySend(DeleteCategory(category))
+                    homeScreenActions.trySend(DeleteCategoryClicked(category))
                 },
                 updateCategoryListener = { currentName, newName ->
                     homeScreenActions.trySend(
-                        UpdateCategoryName(
+                        UpdateCategoryClicked(
                             currentName = currentName,
                             newName = newName
                         )
                     )
                 },
                 historyListener = {
-                    homeScreenActions.trySend(HomeViewModel.HomeScreenAction.ExpenseHistoryClicked(it))
+                    homeScreenActions.trySend(ExpenseHistoryClicked(it))
                 },
                 addExpenseListener = { description, category, amount ->
                     homeScreenActions.trySend(
-                        CreateExpense(
+                        SaveNewExpenseClicked(
                             associatedCategory = category,
                             description = description,
                             amount = amount

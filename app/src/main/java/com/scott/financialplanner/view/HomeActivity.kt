@@ -18,19 +18,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Category
-import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.theme.FinancialPlannerTheme
 import com.scott.financialplanner.theme.backgroundColor
-import com.scott.financialplanner.viewmodel.HomeViewModel
-import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initialized
-import com.scott.financialplanner.viewmodel.HomeViewModel.CategoryState.Initializing
-import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.CategoryAlreadyExists
-import com.scott.financialplanner.viewmodel.HomeViewModel.UhOh.NoUhOh
+import com.scott.financialplanner.viewmodel.CategoriesViewModel
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initialized
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initializing
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.CategoryAlreadyExists
+import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.NavigateToExpenseHistory
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
  * The Launcher activity.
@@ -39,37 +41,41 @@ import java.util.*
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
 
-    private val homeViewModel by viewModels<HomeViewModel>()
+    private val homeViewModel by viewModels<CategoriesViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             FinancialPlannerTheme {
                 HomeScreen(homeViewModel)
-                HandleUhOhs(homeViewModel)
+                ConsumeEvents(homeViewModel)
             }
         }
     }
 }
+
 @Composable
-private fun HandleUhOhs(viewModel: HomeViewModel) {
-    val uhOh = viewModel.uhOhs.collectAsState().value
+private fun ConsumeEvents(
+    viewModel: CategoriesViewModel
+) {
     val context = LocalContext.current
-
-    when (uhOh) {
-        NoUhOh -> { /* Alright, alright, alright */ }
-        is CategoryAlreadyExists -> makeToast(context, "${uhOh.categoryName} Already Exists!")
-        is HomeViewModel.UhOh.NavigateToExpenseHistory -> {
-            val intent = Intent(context, ExpenseHistoryActivity::class.java).apply {
-                putExtra("category_intent", uhOh.categoryName)
+    LaunchedEffect(key1 = Unit) {
+        viewModel.events.collect {
+            when (it) {
+                is CategoryAlreadyExists -> makeToast(context, "${it.categoryName} Already Exists!")
+                is NavigateToExpenseHistory -> {
+                    val intent = Intent(context, ExpenseHistoryActivity::class.java).apply {
+                        putExtra("category_extra", it.categoryName)
+                    }
+                    context.startActivity(intent)
+                }
             }
-            context.startActivity(intent)
         }
     }
 }
 
 @Composable
-private fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+private fun HomeScreen(viewModel: CategoriesViewModel = viewModel()) {
     val categoryLoadingState = viewModel.categoryLoadingState.collectAsState().value
     val categories = remember { mutableStateListOf<Category>() }
 
@@ -88,7 +94,7 @@ private fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
 
         when (categoryLoadingState) {
             Initializing -> {
-
+                // TODO
             }
             Initialized -> {
                 if (categories.isEmpty()) {

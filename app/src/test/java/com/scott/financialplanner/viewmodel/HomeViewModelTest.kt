@@ -5,16 +5,12 @@ import com.scott.financialplanner.TestDispatcherRule
 import com.scott.financialplanner.data.Category
 import com.scott.financialplanner.data.CategoryList
 import com.scott.financialplanner.database.repository.FinanceRepository
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -43,7 +39,7 @@ class HomeViewModelTest {
 
         // Then
         viewmodel.categoryLoadingState.test {
-            awaitItem().shouldBe(HomeViewModel.CategoryState.NoCategories)
+            awaitItem().shouldBe(CategoriesViewModel.LoadingState.NoCategories)
         }
     }
 
@@ -55,7 +51,7 @@ class HomeViewModelTest {
 
         // Then
         viewmodel.categoryLoadingState.test {
-            awaitItem().shouldBe(HomeViewModel.CategoryState.Categories)
+            awaitItem().shouldBe(CategoriesViewModel.LoadingState.Categories)
         }
     }
 
@@ -124,7 +120,7 @@ class HomeViewModelTest {
         every { financeRepository.categories } returns categoryList
     }
 
-    private fun buildViewModel() = HomeViewModel(
+    private fun buildViewModel() = CategoriesViewModel(
         financeRepository = financeRepository,
         dispatcherProvider = dispatcherRule.testCoroutineProvider
     )

@@ -14,13 +14,13 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
-import com.scott.financialplanner.viewmodel.HomeViewModel
+import com.scott.financialplanner.viewmodel.CategoriesViewModel
 import java.text.NumberFormat
 import java.util.*
 
 @Composable
 fun TotalExpenses(
-    viewModel: HomeViewModel = viewModel()) {
+    viewModel: CategoriesViewModel = viewModel()) {
     val totalSpent = viewModel.totalMonthlyExpenses.collectAsState().value
 
     DefaultCard {
