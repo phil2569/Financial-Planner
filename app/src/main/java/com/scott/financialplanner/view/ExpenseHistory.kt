@@ -1,40 +1,77 @@
 package com.scott.financialplanner.view
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Expense
+import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel
+import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.Expenses
+import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.NoExpenses
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.exp
 
 @Composable
 fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel()) {
-    val expenses = expenseHistoryViewModel.expenses.collectAsState().value
-    println("testingg expenses: $expenses")
+    val category = expenseHistoryViewModel.categoryName
+    val expenseHistory = expenseHistoryViewModel.expenseHistory.collectAsState().value
 
+    Column(modifier = Modifier
+        .background(backgroundColor)
+        .fillMaxSize()) {
+        TopAppBar {
+            Text(
+                modifier = Modifier.padding(start = 20.dp),
+                style = MaterialTheme.typography.h1,
+                text = stringResource(R.string.history_title, category),
+            )
+        }
+
+        when (expenseHistory) {
+            NoExpenses -> NoExpenses()
+            is Expenses -> ShowExpenses(expenseHistory.expenses)
+        }
+    }
+}
+
+@Composable
+private fun NoExpenses() {
+    DefaultCard(
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(top = 30.dp)
+    ) {
+        Text(
+            modifier = Modifier.padding(40.dp),
+            text = stringResource(id = R.string.history_no_history),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.body1
+        )
+    }
+}
+
+@Composable
+private fun ShowExpenses(expenses: List<Expense>) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 30.dp)
+        contentPadding = PaddingValues(bottom = 30.dp),
     ) {
         items(expenses) { expense ->
             ExpenseItem(expense)
@@ -43,8 +80,8 @@ fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel(
 }
 
 @Composable
-fun ExpenseItem(expense: Expense) {
-    DefaultCard {
+private fun ExpenseItem(expense: Expense) {
+    DefaultCard(modifier = Modifier.padding(top = 20.dp)) {
         ConstraintLayout(modifier = Modifier.padding(20.dp)) {
             val (date, delete, description, amount) = createRefs()
 
