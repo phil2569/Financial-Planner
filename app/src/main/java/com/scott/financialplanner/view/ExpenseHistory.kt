@@ -9,8 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,8 +22,9 @@ import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel
+import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseAction.DeleteExpenseClicked
 import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.Expenses
-import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.NoExpenses
+import kotlinx.coroutines.channels.SendChannel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,11 +32,26 @@ import java.util.*
 @Composable
 fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel()) {
     val category = expenseHistoryViewModel.categoryName
-    val expenseHistory = expenseHistoryViewModel.expenseHistory.collectAsState().value
+    val expenseHistory = remember { mutableStateListOf<Expense>() }
 
-    Column(modifier = Modifier
-        .background(backgroundColor)
-        .fillMaxSize()) {
+    LaunchedEffect(key1 = Unit) {
+        expenseHistoryViewModel.expenseHistory.collect {
+            when (it) {
+                is Expenses -> {
+                    expenseHistory.clear()
+                    expenseHistory.addAll(it.expenses)
+                }
+                else -> { /* no op */ }
+            }
+        }
+    }
+    val actionChannel = expenseHistoryViewModel.actions
+
+    Column(
+        modifier = Modifier
+            .background(backgroundColor)
+            .fillMaxSize()
+    ) {
         TopAppBar {
             Text(
                 modifier = Modifier.padding(start = 20.dp),
@@ -45,9 +60,13 @@ fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel(
             )
         }
 
-        when (expenseHistory) {
-            NoExpenses -> NoExpenses()
-            is Expenses -> ShowExpenses(expenseHistory.expenses)
+        if (expenseHistory.isEmpty()) {
+            NoExpenses()
+        } else {
+            ShowExpenses(
+                expenseHistory,
+                actionChannel
+            )
         }
     }
 }
@@ -69,18 +88,30 @@ private fun NoExpenses() {
 }
 
 @Composable
-private fun ShowExpenses(expenses: List<Expense>) {
+private fun ShowExpenses(
+    expenses: List<Expense>,
+    actionChannel: SendChannel<ExpenseHistoryViewModel.ExpenseAction>
+) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = 30.dp),
     ) {
         items(expenses) { expense ->
-            ExpenseItem(expense)
+            ExpenseItem(expense, onClick = {
+                actionChannel.trySend(
+                    DeleteExpenseClicked(
+                        expense
+                    )
+                )
+            })
         }
     }
 }
 
 @Composable
-private fun ExpenseItem(expense: Expense) {
+private fun ExpenseItem(
+    expense: Expense,
+    onClick: ((Expense) -> Unit)? = null
+) {
     DefaultCard(modifier = Modifier.padding(top = 20.dp)) {
         ConstraintLayout(modifier = Modifier.padding(20.dp)) {
             val (date, delete, description, amount) = createRefs()
@@ -104,7 +135,7 @@ private fun ExpenseItem(expense: Expense) {
                         end.linkTo(parent.end)
                     }
                     .clickable {
-
+                        onClick?.invoke(expense)
                     },
                 painter = painterResource(id = R.drawable.ic_delete),
                 contentDescription = null,
@@ -149,6 +180,6 @@ fun ExpenseHistoryPreview() {
             amount = 10f,
             dateCreated = Calendar.getInstance(),
             "Category"
-        )
+        ),
     )
 }

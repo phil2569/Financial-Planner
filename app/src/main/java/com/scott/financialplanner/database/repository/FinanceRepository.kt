@@ -40,6 +40,13 @@ interface FinanceRepository {
     fun deleteExpense(expense: Expense)
 
     /**
+     * Retrieves the expenses for the provided category name.
+     * @param categoryName the name of the category.
+     * @return A list of all expenses associated with the category.
+     */
+    suspend fun getCategoryExpenses(categoryName: String): List<Expense>
+
+    /**
      * Edits the category name if it exists. Otherwise, does nothing.
      * @param currentName the current name of the category.
      * @param newName the new name for the category.

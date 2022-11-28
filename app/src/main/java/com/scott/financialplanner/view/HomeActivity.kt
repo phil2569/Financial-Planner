@@ -78,6 +78,7 @@ private fun ConsumeEvents(
 private fun HomeScreen(viewModel: CategoriesViewModel = viewModel()) {
     val categoryLoadingState = viewModel.categoryLoadingState.collectAsState().value
     val categories = remember { mutableStateListOf<Category>() }
+    println("testingg home screen")
 
     LaunchedEffect(Unit) {
         viewModel.categories.collect {

@@ -72,6 +72,10 @@ internal class FinanceRepositoryImpl(
         }
     }
 
+    override suspend fun getCategoryExpenses(categoryName: String): List<Expense> {
+        return expenseRepository.getCategoryExpenses(categoryName)
+    }
+
     override fun editCategoryName(currentName: String, newName: String) {
         coroutineScope.launch {
             getCachedCategory(currentName)?.let {
