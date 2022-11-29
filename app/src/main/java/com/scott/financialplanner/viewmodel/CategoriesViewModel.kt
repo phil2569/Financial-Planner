@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scott.financialplanner.data.Category
 import com.scott.financialplanner.data.Expense
+import com.scott.financialplanner.data.sumOfExpenses
 import com.scott.financialplanner.database.repository.FinanceRepository
 import com.scott.financialplanner.provider.DispatcherProvider
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.NewCategoryClicked
@@ -12,7 +13,6 @@ import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.D
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.ExpenseHistoryClicked
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryAction.UpdateCategoryClicked
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initialized
-import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initializing
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.CategoryAlreadyExists
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.NavigateToExpenseHistory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,13 +32,15 @@ class CategoriesViewModel @Inject constructor(
     private val dispatcherProvider: DispatcherProvider
 ) : ViewModel() {
 
+    private val _categories = MutableSharedFlow<List<Category>>()
     private val _actionChannel = Channel<CategoryAction>(capacity = Channel.UNLIMITED)
     private val _events = MutableSharedFlow<CategoryEvent>()
-    private val _categoriesLoadingState: MutableStateFlow<LoadingState> = MutableStateFlow(Initializing)
     private val _totalMonthlyExpenses = MutableStateFlow(0f)
+    private val _categoriesLoadingState: MutableStateFlow<LoadingState> =
+        MutableStateFlow(LoadingState.Initializing)
 
     /**
-     * An action channel the UI can send events to.
+     * An action channel a consumer can send events to.
      */
     val actions: SendChannel<CategoryAction> = _actionChannel
 
@@ -60,7 +62,7 @@ class CategoriesViewModel @Inject constructor(
     /**
      * An observable containing the list of created categories.
      */
-    val categories: SharedFlow<List<Category>> = financeRepository.categories
+    val categories = _categories.asSharedFlow()
 
     init {
         _actionChannel.receiveAsFlow()
@@ -74,16 +76,24 @@ class CategoriesViewModel @Inject constructor(
     private fun handleAction(action: CategoryAction) {
         when (action) {
             is NewCategoryClicked -> createCategory(action.categoryName)
-            is SaveNewExpenseClicked -> createExpense(action.description, action.amount, action.associatedCategory)
+            is SaveNewExpenseClicked -> createExpense(
+                action.description,
+                action.amount,
+                action.associatedCategory
+            )
             is DeleteCategoryClicked -> deleteCategory(action.categoryName)
             is UpdateCategoryClicked -> editCategoryName(action.currentName, action.newName)
             is ExpenseHistoryClicked -> navigateToExpenseHistory(action.categoryName)
         }
     }
 
-    private fun handleCategories(categories: List<Category>) {
-        _categoriesLoadingState.value = Initialized
+    private suspend fun handleCategories(categoriesMap: Map<String, List<Expense>>) {
+        val categories = categoriesMap.map {
+            Category(it.key, it.value.sumOfExpenses())
+        }
         updateTotalExpenses(categories = categories)
+        _categories.emit(categories)
+        _categoriesLoadingState.value = Initialized
     }
 
     private fun updateTotalExpenses(categories: List<Category>) {
@@ -134,7 +144,7 @@ class CategoriesViewModel @Inject constructor(
     }
 
     /**
-     * Represents the loading state of the [categories].
+     * Represents the initialization state of this viewModel.
      */
     sealed class LoadingState {
         object Initializing : LoadingState()
@@ -142,11 +152,11 @@ class CategoriesViewModel @Inject constructor(
     }
 
     /**
-     * View Model events for the consumer to handle.
+     * View Model events for the consumer.
      */
     sealed class CategoryEvent {
         data class CategoryAlreadyExists(val categoryName: String) : CategoryEvent()
-        data class NavigateToExpenseHistory(val categoryName: String): CategoryEvent()
+        data class NavigateToExpenseHistory(val categoryName: String) : CategoryEvent()
     }
 
     /**
@@ -155,7 +165,9 @@ class CategoriesViewModel @Inject constructor(
     sealed class CategoryAction {
         data class NewCategoryClicked(val categoryName: String) : CategoryAction()
         data class DeleteCategoryClicked(val categoryName: String) : CategoryAction()
-        data class UpdateCategoryClicked(val currentName: String, val newName: String) : CategoryAction()
+        data class UpdateCategoryClicked(val currentName: String, val newName: String) :
+            CategoryAction()
+
         data class ExpenseHistoryClicked(val categoryName: String) : CategoryAction()
         data class SaveNewExpenseClicked(
             val associatedCategory: String,

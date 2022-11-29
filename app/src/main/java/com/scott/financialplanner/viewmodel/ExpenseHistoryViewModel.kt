@@ -4,73 +4,64 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scott.financialplanner.data.Expense
-import com.scott.financialplanner.database.repository.ExpenseRepository
 import com.scott.financialplanner.database.repository.FinanceRepository
-import com.scott.financialplanner.provider.DispatcherProvider
-import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.Expenses
-import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.NoExpenses
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseHistoryViewModel @Inject constructor(
     private val financeRepository: FinanceRepository,
-    private val dispatcherProvider: DispatcherProvider,
     savedStateHandle: SavedStateHandle
-): ViewModel(){
+) : ViewModel() {
 
     private val _actionChannel = Channel<ExpenseAction>(capacity = Channel.UNLIMITED)
-    private val _expenseHistory: MutableSharedFlow<ExpenseHistory> = MutableStateFlow(NoExpenses)
+    private val _expenseHistory = MutableStateFlow(listOf<Expense>())
 
     /**
      * An action channel the UI can send events to.
      */
     val actions: SendChannel<ExpenseAction> = _actionChannel
 
+    /**
+     * The category the expense history is associated with.
+     */
     val categoryName = savedStateHandle.get<String>("category_extra") ?: ""
 
-    val expenseHistory = _expenseHistory.asSharedFlow()
+    /**
+     * All expense history.
+     */
+    val expenseHistory = _expenseHistory.asStateFlow()
 
     init {
         _actionChannel.receiveAsFlow().onEach {
             when (it) {
                 is ExpenseAction.DeleteExpenseClicked -> {
                     deleteExpenseItem(it.expense)
-                    loadExpenses()
                 }
             }
         }.launchIn(viewModelScope)
-        loadExpenses()
+
+        // Observe changes to the repository.
+        financeRepository.categories.onEach {
+            refreshExpenses(it[categoryName])
+        }.launchIn(viewModelScope)
+
+        refreshExpenses(financeRepository.getCategoryExpenses(categoryName))
     }
 
-    private fun loadExpenses() {
-        viewModelScope.launch(dispatcherProvider.default()) {
-            financeRepository.getCategoryExpenses(categoryName).let {
-                val expenseHistory = when {
-                    it.isEmpty() -> NoExpenses
-                    else -> Expenses(it.sortedByDescending { it.dateCreated })
-                }
-                _expenseHistory.emit(expenseHistory)
-            }
-        }
+    private fun refreshExpenses(expenses: List<Expense>?) {
+        val expenseHistory = expenses?.sortedByDescending { it.dateCreated } ?: emptyList()
+        _expenseHistory.tryEmit(expenseHistory)
     }
 
     private fun deleteExpenseItem(expense: Expense) {
-        viewModelScope.launch(dispatcherProvider.default()) {
-            financeRepository.deleteExpense(expense)
-        }
+        financeRepository.deleteExpense(expense)
     }
 
     sealed class ExpenseAction {
-        data class DeleteExpenseClicked(val expense: Expense): ExpenseAction()
-    }
-
-    sealed class ExpenseHistory {
-        object NoExpenses: ExpenseHistory()
-        data class Expenses(val expenses: List<Expense>): ExpenseHistory()
+        data class DeleteExpenseClicked(val expense: Expense) : ExpenseAction()
     }
 }

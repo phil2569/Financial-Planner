@@ -68,6 +68,7 @@ dependencies {
 
         // Room
         implementation("androidx.room:room-runtime:$room")
+        implementation("androidx.room:room-ktx:$room")
         kapt("androidx.room:room-compiler:$room")
 
         // Unit Test

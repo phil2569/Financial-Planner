@@ -18,21 +18,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.scott.financialplanner.R
 import com.scott.financialplanner.data.Category
 import com.scott.financialplanner.theme.FinancialPlannerTheme
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.CategoriesViewModel
-import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initialized
-import com.scott.financialplanner.viewmodel.CategoriesViewModel.LoadingState.Initializing
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.CategoryAlreadyExists
 import com.scott.financialplanner.viewmodel.CategoriesViewModel.CategoryEvent.NavigateToExpenseHistory
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 /**
  * The Launcher activity.
@@ -78,7 +72,6 @@ private fun ConsumeEvents(
 private fun HomeScreen(viewModel: CategoriesViewModel = viewModel()) {
     val categoryLoadingState = viewModel.categoryLoadingState.collectAsState().value
     val categories = remember { mutableStateListOf<Category>() }
-    println("testingg home screen")
 
     LaunchedEffect(Unit) {
         viewModel.categories.collect {
@@ -94,10 +87,10 @@ private fun HomeScreen(viewModel: CategoriesViewModel = viewModel()) {
     ) {
 
         when (categoryLoadingState) {
-            Initializing -> {
+            CategoriesViewModel.LoadingState.Initializing -> {
                 // TODO
             }
-            Initialized -> {
+            is CategoriesViewModel.LoadingState.Initialized -> {
                 if (categories.isEmpty()) {
                     TopAppBar(backgroundColor = MaterialTheme.colors.primary) {
                         Text(

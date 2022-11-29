@@ -1,6 +1,6 @@
 package com.scott.financialplanner.data
 
-import java.util.*
+import java.util.Calendar
 
 /**
  * Models an expense item.
@@ -15,3 +15,9 @@ data class Expense(
     val dateCreated: Calendar,
     val associatedCategory: String
 )
+
+fun List<Expense>.sumOfExpenses(): Float {
+    var total = 0f
+    forEach { total += it.amount }
+    return total
+}

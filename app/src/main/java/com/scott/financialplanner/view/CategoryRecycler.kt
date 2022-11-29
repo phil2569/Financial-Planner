@@ -416,7 +416,7 @@ fun NewExpense(
 @Composable
 fun CategoryCardPreview() {
     CategoryCard(
-        category = Category("Category", 2f),
+        category = Category("Category", 0f),
         state = LazyListState(),
         index = 1
     )

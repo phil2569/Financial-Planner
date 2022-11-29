@@ -62,7 +62,7 @@ class HomeViewModelTest {
         val viewmodel = buildViewModel()
 
         // Then
-        viewmodel.categories.test {
+        viewmodel.categoriesState.test {
             awaitItem().shouldBe(CategoryList(listOf(fakeCategory)))
         }
     }

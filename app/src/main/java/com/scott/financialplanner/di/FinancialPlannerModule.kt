@@ -3,10 +3,6 @@ package com.scott.financialplanner.di
 import android.content.Context
 import androidx.room.Room
 import com.scott.financialplanner.database.FinanceDatabase
-import com.scott.financialplanner.database.repository.CategoryRepository
-import com.scott.financialplanner.database.repository.CategoryRepositoryImpl
-import com.scott.financialplanner.database.repository.ExpenseRepository
-import com.scott.financialplanner.database.repository.ExpenseRepositoryImpl
 import com.scott.financialplanner.database.repository.FinanceRepository
 import com.scott.financialplanner.database.repository.FinanceRepositoryImpl
 import com.scott.financialplanner.provider.DispatchProviderImpl
@@ -27,32 +23,19 @@ object FinancialPlannerModule {
     internal fun provideDatabase(@ApplicationContext context: Context): FinanceDatabase =
         Room.databaseBuilder(
             context,
-            FinanceDatabase::class.java, "financial_planner_database"
+            FinanceDatabase::class.java, FinanceDatabase.NAME
         ).build()
 
     @Provides
     @Singleton
     internal fun provideFinanceRepository(
-        categoryRepository: CategoryRepository,
-        expenseRepository: ExpenseRepository,
+        database: FinanceDatabase,
         dispatcherProvider: DispatcherProvider
     ): FinanceRepository = FinanceRepositoryImpl(
-        categoryRepository,
-        expenseRepository,
+        database.categoryDao(),
+        database.expenseDao(),
         dispatcherProvider
     )
-
-    @Provides
-    @Singleton
-    internal fun provideCategoryRepository(
-        database: FinanceDatabase
-    ): CategoryRepository = CategoryRepositoryImpl(database.categoryDao())
-
-    @Provides
-    @Singleton
-    internal fun provideExpenseRepository(
-        database: FinanceDatabase
-    ): ExpenseRepository = ExpenseRepositoryImpl(database.expenseDao())
 
     @Provides
     @Singleton

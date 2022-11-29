@@ -23,7 +23,6 @@ import com.scott.financialplanner.data.Expense
 import com.scott.financialplanner.theme.backgroundColor
 import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel
 import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseAction.DeleteExpenseClicked
-import com.scott.financialplanner.viewmodel.ExpenseHistoryViewModel.ExpenseHistory.Expenses
 import kotlinx.coroutines.channels.SendChannel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -31,21 +30,16 @@ import java.util.*
 
 @Composable
 fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel()) {
+    val actionChannel = expenseHistoryViewModel.actions
     val category = expenseHistoryViewModel.categoryName
     val expenseHistory = remember { mutableStateListOf<Expense>() }
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(Unit) {
         expenseHistoryViewModel.expenseHistory.collect {
-            when (it) {
-                is Expenses -> {
-                    expenseHistory.clear()
-                    expenseHistory.addAll(it.expenses)
-                }
-                else -> { /* no op */ }
-            }
+            expenseHistory.clear()
+            expenseHistory.addAll(it)
         }
     }
-    val actionChannel = expenseHistoryViewModel.actions
 
     Column(
         modifier = Modifier
@@ -63,7 +57,7 @@ fun ExpenseHistory(expenseHistoryViewModel: ExpenseHistoryViewModel = viewModel(
         if (expenseHistory.isEmpty()) {
             NoExpenses()
         } else {
-            ShowExpenses(
+            Expenses(
                 expenseHistory,
                 actionChannel
             )
@@ -88,7 +82,7 @@ private fun NoExpenses() {
 }
 
 @Composable
-private fun ShowExpenses(
+private fun Expenses(
     expenses: List<Expense>,
     actionChannel: SendChannel<ExpenseHistoryViewModel.ExpenseAction>
 ) {

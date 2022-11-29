@@ -5,7 +5,6 @@ import androidx.compose.material.Typography
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 
-
 private val colorPalette = lightColors(
     primary = primaryColor,
     onBackground = primaryColor

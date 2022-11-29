@@ -2,12 +2,13 @@ package com.scott.financialplanner.database.dao
 
 import androidx.room.*
 import com.scott.financialplanner.database.entity.ExpenseEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal interface ExpenseDao {
 
     @Query("SELECT * FROM expenses")
-    fun getAllExpenses(): List<ExpenseEntity>
+    fun allExpenses(): Flow<List<ExpenseEntity>>
 
     @Insert
     fun insertExpense(expense: ExpenseEntity)

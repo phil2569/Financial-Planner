@@ -2,7 +2,6 @@ package com.scott.financialplanner.di
 
 import com.scott.financialplanner.TestDispatcherRule
 import com.scott.financialplanner.database.FinanceDatabase
-import com.scott.financialplanner.database.repository.CategoryRepositoryImpl
 import com.scott.financialplanner.database.repository.ExpenseRepositoryImpl
 import com.scott.financialplanner.database.repository.FinanceRepositoryImpl
 import com.scott.financialplanner.provider.DispatchProviderImpl

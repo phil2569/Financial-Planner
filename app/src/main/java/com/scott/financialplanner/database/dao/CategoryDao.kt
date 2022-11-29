@@ -2,12 +2,13 @@ package com.scott.financialplanner.database.dao
 
 import androidx.room.*
 import com.scott.financialplanner.database.entity.CategoryEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal interface CategoryDao {
 
     @Query("SELECT * FROM categories")
-    fun getCategories(): List<CategoryEntity>
+    fun allCategories(): Flow<List<CategoryEntity>>
 
     @Insert
     fun insertCategory(categoryEntity: CategoryEntity)
@@ -17,8 +18,5 @@ internal interface CategoryDao {
 
     @Query("UPDATE categories SET name = :newName WHERE name == :currentName")
     fun updateCategory(currentName: String, newName: String)
-
-    @Query("SELECT EXISTS (SELECT * FROM categories WHERE name == :category)")
-    fun categoryExists(category: String): Boolean
 
 }

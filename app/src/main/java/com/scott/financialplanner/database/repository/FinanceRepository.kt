@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.SharedFlow
 interface FinanceRepository {
 
     /**
-     * An observable that emits a list of [Category].
+     * A shared flow emitting a map of category to it's expenses.
      */
-    val categories: SharedFlow<List<Category>>
+    val categories: SharedFlow<Map<String, List<Expense>>>
 
     /**
      * Creates a new [Category].
@@ -44,7 +44,7 @@ interface FinanceRepository {
      * @param categoryName the name of the category.
      * @return A list of all expenses associated with the category.
      */
-    suspend fun getCategoryExpenses(categoryName: String): List<Expense>
+    fun getCategoryExpenses(categoryName: String): List<Expense>
 
     /**
      * Edits the category name if it exists. Otherwise, does nothing.
@@ -57,5 +57,5 @@ interface FinanceRepository {
      * @return true if the category exists.
      * @param categoryName the name of the category.
      */
-    suspend fun categoryExists(categoryName: String): Boolean
+    fun categoryExists(categoryName: String): Boolean
 }
