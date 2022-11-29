@@ -76,7 +76,8 @@ fun CategoryRecycler(
                         SaveNewExpenseClicked(
                             associatedCategory = category,
                             description = description,
-                            amount = amount
+                            amount = amount,
+                            dateCreated = Calendar.getInstance()
                         )
                     )
                 }

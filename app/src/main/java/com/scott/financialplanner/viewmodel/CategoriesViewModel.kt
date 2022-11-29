@@ -79,7 +79,8 @@ class CategoriesViewModel @Inject constructor(
             is SaveNewExpenseClicked -> createExpense(
                 action.description,
                 action.amount,
-                action.associatedCategory
+                action.associatedCategory,
+                action.dateCreated
             )
             is DeleteCategoryClicked -> deleteCategory(action.categoryName)
             is UpdateCategoryClicked -> editCategoryName(action.currentName, action.newName)
@@ -126,13 +127,14 @@ class CategoriesViewModel @Inject constructor(
     private fun createExpense(
         expenseDescription: String,
         expenseAmount: String,
-        associatedCategory: String
+        associatedCategory: String,
+        dateCreated: Calendar
     ) {
         val expense = Expense(
             description = expenseDescription,
             amount = expenseAmount.toFloat(),
             associatedCategory = associatedCategory,
-            dateCreated = Calendar.getInstance()
+            dateCreated = dateCreated
         )
         financeRepository.createExpense(expense)
     }
@@ -172,7 +174,8 @@ class CategoriesViewModel @Inject constructor(
         data class SaveNewExpenseClicked(
             val associatedCategory: String,
             val description: String,
-            val amount: String
+            val amount: String,
+            val dateCreated: Calendar
         ) : CategoryAction()
     }
 }
